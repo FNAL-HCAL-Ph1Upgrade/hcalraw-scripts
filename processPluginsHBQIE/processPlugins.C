@@ -1,0 +1,173 @@
+#include "TROOT.h"
+#include "TObject.h"
+#include "TH1.h"
+#include "TCanvas.h"
+#include "TF1.h"
+#include "TLegend.h"
+#include "TMath.h"
+#include "TFile.h"
+#include "TDirectory.h"
+#include "TList.h"
+#include "TLatex.h"
+#include "TGraph.h"
+#include <cmath>
+#include <cstdio>
+#include <vector>
+
+double lineFun(double* x, double* p)
+{
+    //p[0]: Slope of the line
+    //p[1]: y-intercept of the line
+    return p[0]*x[0] + p[1];
+}
+
+void fitHisto(const std::string& plugin, TGraph* hfit)
+{
+    TCanvas c1("c1","c1",800,800);
+    gPad->SetTopMargin(0.1);
+    gPad->SetBottomMargin(0.12);
+    gPad->SetRightMargin(0.05);
+    gPad->SetLeftMargin(0.14);
+    TLegend* leg = new TLegend(0.3, 0.8, 0.7, 0.9);
+    leg->SetTextSize(0.03);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(hfit,"Data","P");
+    //c1.SetLogx();
+    //c1.SetLogy();
+    TH1* temp = new TH1F("dummy","dummy",10,0,1);
+    temp->GetXaxis()->SetRangeUser(0, 1);
+    temp->GetXaxis()->SetRangeUser(0, 1);
+    temp->SetMinimum(0.0000001);
+    temp->SetMaximum(1);
+    temp->SetStats(false);
+    temp->SetTitle( plugin.c_str() );
+    temp->SetLineColor(kBlack);
+    temp->GetYaxis()->SetTitle("y_axis");
+    temp->GetXaxis()->SetTitle("x_axis");
+    temp->SetTitleOffset(1,"X");
+    temp->SetTitleOffset(1.2,"Y");
+    temp->SetTitleSize(0.05,"X");
+    temp->SetTitleSize(0.05,"Y");
+    temp->Rebin(2);
+    temp->Draw();
+    hfit->SetLineWidth(3);
+    hfit->SetMarkerStyle(21);
+    //hfit->SetLineColor(2);
+    hfit->Draw("same P");
+    //hfit->Draw("same AP");
+    leg->Draw();
+    
+    //////////////////////
+    //Fitting info
+    //////////////////////
+                                                     
+    double min1   =   0; double max1   = 200;   
+    double min2   =  -1; double max2   =   1;   
+    double set1   =   6;                         
+    double set2   =   0;
+    double fitmin =   0; double fitmax = 1;
+    
+    TF1* fit1 = new TF1("line", lineFun, 0.0, 1.0, 3);
+    fit1->SetParLimits(0, min1, max1); 
+    fit1->SetParLimits(1, min2, max2); 
+    fit1->SetParameter(0, set1);
+    fit1->SetParameter(1, set2);
+    fit1->SetLineWidth(2);
+    fit1->SetLineColor(kRed);
+    hfit->Fit(fit1, "RQM", "", fitmin, fitmax);
+    fit1->Draw("same");
+    leg->AddEntry(fit1,"Fit","l");
+    
+    printf(
+           "Chi^2:%10.4f, P0:%10.4f, P1:%10.4f\n",
+           fit1->GetChisquare(), fit1->GetParameter(0), fit1->GetParameter(1)
+           );
+
+    char chi2[100];
+    char slope[100];
+    char b[100];
+    sprintf(chi2,  "#chi^{2} %17s %.3f"    , "", fit1->GetChisquare() );
+    sprintf(slope, "slope %11s %.3f"       , "", fit1->GetParameter(0));
+    sprintf(b,     "y-intercept %1s %.3f"  , "", fit1->GetParameter(1));
+
+
+    TLatex mark;
+    mark.SetNDC(true);
+    mark.SetTextAlign(11);
+    mark.SetTextSize(0.030);
+    //mark.SetTextFont(61);
+    mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13        ),  chi2);
+    mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.03 ), slope);
+    mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.06 ),     b);
+
+    
+    c1.Print("FittedPlot.pdf");
+
+    delete leg;
+    delete temp;
+    delete fit1;
+}
+
+void processPlugins(const std::string& plugin, const std::string& file, const std::string& hist, const int nEvents = 100, const int hmax = 10000)
+{
+    gROOT->SetStyle("Plain");
+
+    TFile *f = TFile::Open( file.c_str() );
+    TH1* scan = (TH1*)f->Get( hist.c_str() );
+    
+    std::vector<double> known;
+    if(plugin == "GselScan")
+    {
+        known = {35.65, 34.10, 31.00, 27.90, 24.80, 21.70, 18.60, 15.50, 12.40, 9.30, 6.20, 4.65, 3.10};         
+    }
+    else if(plugin == "iQiScan")
+    {
+        known = {90, 180, 360, 720, 1440, 2880, 5760, 8640};        
+    }
+    
+    std::vector<double> mean;
+    for(int index = 0; index <= known.size() - 1; index++)
+    {
+        TH1* h = new TH1D("h","h",hmax,0,hmax);
+        for(int bin = 0 + nEvents*index; bin <= (nEvents - 1)  + nEvents*index; bin++)
+        {
+            h->Fill( scan->GetBinContent(bin) );
+        }
+        mean.push_back( h->GetMean() );
+        delete h;
+    }
+
+    std::vector<double> ratio;
+    std::vector<double> knownRatio;
+    double meanMax = *max_element(mean.begin(), mean.end());
+    double knownMax = *max_element(known.begin(), known.end());
+
+    for(int index = 0; index <= known.size(); index++)
+    {
+        ratio.push_back(mean[index]/meanMax);
+        knownRatio.push_back( known[index] / knownMax );
+    }
+    
+    int n = ratio.size();
+    double x[n], y[n];
+    for(int i = 0; i < ratio.size() - 1; i++)
+    {
+        x[i] = ratio[i];
+        y[i] = knownRatio[i];
+        std::cout<<x[i]<<" "<<y[i]<<std::endl;
+    }
+
+    TGraph* gFit = new TGraph (n, x, y);
+
+    fitHisto(plugin, gFit);
+
+    delete gFit;
+}
+
+int main()
+{
+    //processPlugins("GselScan","run178-iQi_GselScan.root","TS_3_ADC_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_4_Ch_0_1D"   );
+    processPlugins("iQiScan" ,"run179-iQiScan.root"     ,"TS_3_Charge_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_7_Ch_4_1D");
+}
+
