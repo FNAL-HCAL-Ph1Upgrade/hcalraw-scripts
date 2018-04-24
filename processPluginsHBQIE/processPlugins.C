@@ -87,10 +87,12 @@ void fitHisto(const std::string& plugin, TGraph* hfit)
     char chi2[100];
     char slope[100];
     char b[100];
-    sprintf(chi2,  "#chi^{2} %17s %.3f"    , "", fit1->GetChisquare() );
-    sprintf(slope, "slope %11s %.3f"       , "", fit1->GetParameter(0));
-    sprintf(b,     "y-intercept %1s %.3f"  , "", fit1->GetParameter(1));
+    std::string fix = "";
+    if(fit1->GetParameter(1) < 0) fix = " ";
 
+    sprintf(chi2,  "#chi^{2} %18s %.3f"             , "", fit1->GetChisquare() );
+    sprintf(slope, "slope %10s %s %.3f #pm %.3f"    , "", fix.c_str(), fit1->GetParameter(0), fit1->GetParError(0));
+    sprintf(b,     "y-intercept %2s %.3f #pm %.3f"  , "", fit1->GetParameter(1), fit1->GetParError(1));
 
     TLatex mark;
     mark.SetNDC(true);
@@ -99,8 +101,7 @@ void fitHisto(const std::string& plugin, TGraph* hfit)
     //mark.SetTextFont(61);
     mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13        ),  chi2);
     mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.03 ), slope);
-    mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.06 ),     b);
-
+    mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.06 ),     b);    
     
     c1.Print("FittedPlot.pdf");
 
@@ -109,7 +110,7 @@ void fitHisto(const std::string& plugin, TGraph* hfit)
     delete fit1;
 }
 
-void processPlugins(const std::string& plugin, const std::string& file, const std::string& hist, const int nEvents = 100, const int hmax = 10000)
+void processPlugins(const std::string& plugin, const std::string& file, const std::string& hist, const bool verb = true, const int nEvents = 100, const int hmax = 10000)
 {
     gROOT->SetStyle("Plain");
 
@@ -119,7 +120,7 @@ void processPlugins(const std::string& plugin, const std::string& file, const st
     std::vector<double> known;
     if(plugin == "GselScan")
     {
-        known = {35.65, 34.10, 31.00, 27.90, 24.80, 21.70, 18.60, 15.50, 12.40, 9.30, 6.20, 4.65, 3.10};         
+        known = {1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65};
     }
     else if(plugin == "iQiScan")
     {
@@ -127,15 +128,18 @@ void processPlugins(const std::string& plugin, const std::string& file, const st
     }
     
     std::vector<double> mean;
-    for(int index = 0; index <= known.size() - 1; index++)
+    for(int index = 0; index < known.size(); index++)
     {
-        TH1* h = new TH1D("h","h",hmax,0,hmax);
-        for(int bin = 0 + nEvents*index; bin <= (nEvents - 1)  + nEvents*index; bin++)
+        double m = 0;
+        int n = 0;
+        for(int bin = 1 + nEvents*index; bin <= (nEvents) + nEvents*index; bin++)
         {
-            h->Fill( scan->GetBinContent(bin) );
+            n++;
+            m += scan->GetBinContent(bin);
+            if(verb) std::cout<<index<<"  "<<bin<<"  "<<scan->GetBinContent(bin)<<std::endl;
         }
-        mean.push_back( h->GetMean() );
-        delete h;
+        if(verb) std::cout<<n<<std::endl;
+        mean.push_back( m/n );
     }
 
     std::vector<double> ratio;
@@ -143,19 +147,20 @@ void processPlugins(const std::string& plugin, const std::string& file, const st
     double meanMax = *max_element(mean.begin(), mean.end());
     double knownMax = *max_element(known.begin(), known.end());
 
-    for(int index = 0; index <= known.size(); index++)
+    for(int index = 0; index < known.size(); index++)
     {
+        if(verb) std::cout<<"Measured: "<<mean[index]<<"  Ref: "<<known[index]<<std::endl;
         ratio.push_back(mean[index]/meanMax);
         knownRatio.push_back( known[index] / knownMax );
     }
     
     int n = ratio.size();
     double x[n], y[n];
-    for(int i = 0; i < ratio.size() - 1; i++)
+    for(int i = 0; i < ratio.size(); i++)
     {
         x[i] = ratio[i];
         y[i] = knownRatio[i];
-        std::cout<<x[i]<<" "<<y[i]<<std::endl;
+        if(verb) std::cout<<x[i]<<" "<<y[i]<<std::endl;
     }
 
     TGraph* gFit = new TGraph (n, x, y);
@@ -167,7 +172,7 @@ void processPlugins(const std::string& plugin, const std::string& file, const st
 
 int main()
 {
-    //processPlugins("GselScan","run178-iQi_GselScan.root","TS_3_ADC_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_4_Ch_0_1D"   );
+    //processPlugins("GselScan","run178-iQi_GselScan.root","TS_3_Charge_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_8_Ch_3_1D");
     processPlugins("iQiScan" ,"run179-iQiScan.root"     ,"TS_3_Charge_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_7_Ch_4_1D");
 }
 
