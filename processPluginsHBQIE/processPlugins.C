@@ -1,16 +1,17 @@
-#include "TROOT.h"
-#include "TObject.h"
+//#include "TROOT.h"
+//#include "TObject.h"
 #include "TH1.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TLegend.h"
 #include "TMath.h"
 #include "TFile.h"
-#include "TDirectory.h"
-#include "TList.h"
+//#include "TDirectory.h"
+//#include "TList.h"
 #include "TLatex.h"
 #include "TGraph.h"
 #include "TSystem.h"
+#include "TAxis.h"
 
 #include <getopt.h>
 #include <cmath>
@@ -19,31 +20,17 @@
 #include <iostream>
 #include <string>
 
-class PluginInfo
+class PluginSummary
 {
-protected:
-    std::vector<double> known = {0.0};
 public:
-    virtual std::vector<double> getKnown() {return known;}
+    std::vector<double> known;
+    std::string plugin;
+    std::string histName;
+    std::string histNameX;
+    std::string histNameY;
+    std::string runNum;
+    int nEvents;
 };
-
-class iQi_GselScan : public PluginInfo
-{
-private:
-    std::vector<double> known = {1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65};
-public:
-    std::vector<double> getKnown() {return known;}
-
-};
-
-class iQiScan : public PluginInfo
-{
-private:
-    std::vector<double> known = {90, 180, 360, 720, 1440, 2880, 5760, 8640}; 
-public:
-    std::vector<double> getKnown() {return known;}
-};
-
 
 double lineFun(double* x, double* p)
 {
@@ -52,9 +39,9 @@ double lineFun(double* x, double* p)
     return p[0]*x[0] + p[1];
 }
 
-void fitHisto(const std::string& plugin, TGraph* hfit, const std::string& histName, const std::string& runNum)
+void fitHisto(const PluginSummary& pluginInfo, TGraph* hfit)
 {
-    TCanvas c1("c1","c1",800,800);
+    TCanvas* c1 = new TCanvas("c1","c1",800,800);
     gPad->SetTopMargin(0.1);
     gPad->SetBottomMargin(0.12);
     gPad->SetRightMargin(0.05);
@@ -63,7 +50,7 @@ void fitHisto(const std::string& plugin, TGraph* hfit, const std::string& histNa
     leg->SetTextSize(0.03);
     leg->SetBorderSize(0);
     leg->SetFillStyle(0);
-    leg->AddEntry(hfit,"Data","P");
+    leg->AddEntry(hfit,"Setting","P");
     //c1.SetLogx();
     //c1.SetLogy();
     TH1* temp = new TH1F("dummy","dummy",10,0,1);
@@ -72,15 +59,17 @@ void fitHisto(const std::string& plugin, TGraph* hfit, const std::string& histNa
     temp->SetMinimum(0.00000001);
     temp->SetMaximum(1.00001);
     temp->SetStats(false);
-    temp->SetTitle( (plugin+"  "+histName).c_str() );
+    temp->SetTitle(0);
+    //temp->SetTitle( (pluginInfo.plugin+"  "+pluginInfo.histName).c_str() );
     temp->SetLineColor(kBlack);
-    temp->GetYaxis()->SetTitle("y_axis");
-    temp->GetXaxis()->SetTitle("x_axis");
+    temp->GetYaxis()->SetTitle(pluginInfo.histNameY.c_str());
+    temp->GetXaxis()->SetTitle(pluginInfo.histNameX.c_str());
     temp->SetTitleOffset(1,"X");
     temp->SetTitleOffset(1.2,"Y");
     temp->SetTitleSize(0.05,"X");
     temp->SetTitleSize(0.05,"Y");
     temp->Draw();
+    c1->Modified();
     hfit->SetLineWidth(3);
     hfit->SetMarkerStyle(21);
     //hfit->SetLineColor(2);
@@ -107,7 +96,7 @@ void fitHisto(const std::string& plugin, TGraph* hfit, const std::string& histNa
     fit1->SetLineColor(kRed);
     hfit->Fit(fit1, "RQM", "", fitmin, fitmax);
     fit1->Draw("same");
-    leg->AddEntry(fit1,"Fit","l");
+    leg->AddEntry(fit1,"Linear Fit","l");
     
     printf(
            "Chi^2:%10.4f, P0:%8.4f +/- %8.4f  P1:%8.4f +/- %8.4f\n",
@@ -128,49 +117,57 @@ void fitHisto(const std::string& plugin, TGraph* hfit, const std::string& histNa
     mark.SetNDC(true);
     mark.SetTextAlign(11);
     mark.SetTextSize(0.030);
-    //mark.SetTextFont(61);
     mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13        ),  chi2);
     mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.03 ), slope);
     mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.06 ),     b);    
+    mark.SetTextSize(0.035);
+    mark.SetTextFont(1);
+    mark.DrawLatex( 0.09, 0.95, pluginInfo.histName.c_str());
+    
+    gSystem->Exec( ("mkdir -p run"+pluginInfo.runNum+"/").c_str() ) ;
+    c1->Print(("run"+pluginInfo.runNum+"/"+pluginInfo.histName+".png").c_str());
 
-    gSystem->Exec( ("mkdir -p run"+runNum+"/").c_str() ) ;
-    c1.Print(("run"+runNum+"/FittedPlot_"+histName+".png").c_str());
-
+    delete c1;
     delete leg;
     delete temp;
     delete fit1;
 }
 
-void processPlugins(const std::string& plugin, const std::string& file, const std::string& histName, const std::string& runNum, const bool verb = true, const int nEvents = 100, const int hmax = 10000)
+void processPlugins(const std::string& plugin, const std::string& file,
+                    const std::string& histVar,const std::string& histName,
+                    const std::string& histD,  const std::string& runNum, const bool verb = true)
 {
     TH1::AddDirectory(false);
-    gROOT->SetStyle("Plain");
+    TFile* f = TFile::Open( file.c_str() );
+    TH1* scan = (TH1*)f->Get( (histVar+histName+histD).c_str() );
+
+    f->Close();
+    delete f;
     
-    TFile *f = TFile::Open( file.c_str() );
-    TH1* scan = (TH1*)f->Get( histName.c_str() );
-    
-    PluginInfo* pluginInfo = nullptr;
+    PluginSummary pluginInfo;
     if(plugin == "iQi_GselScan")
     {
-        pluginInfo = new iQi_GselScan();
+        pluginInfo ={
+            {1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65},
+            plugin, "Run"+runNum+"_"+plugin+"_"+histName, "Measured Gain", "Reference Gain", runNum, 100
+        };
     }
     else if(plugin == "iQiScan")
     {
-        pluginInfo = new iQiScan();
+        pluginInfo = {
+            {90, 180, 360, 720, 1440, 2880, 5760, 8640},
+            plugin, "Run"+runNum+"_"+plugin+"_"+histName, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", runNum, 100
+        };
     }
 
-    std::vector<double> known = pluginInfo->getKnown();
-    std::cout<<known.size()<<std::endl;
-    
     std::vector<double> mean;
-    for(int index = 0; index < known.size(); index++)
+    for(int index = 0; index < pluginInfo.known.size(); index++)
     {
         double m = 0;
         int n = 0;
-        for(int bin = 1 + nEvents*index; bin <= (nEvents) + nEvents*index; bin++)
+        for(int bin = 1 + pluginInfo.nEvents*index; bin <= (pluginInfo.nEvents) + pluginInfo.nEvents*index; bin++)
         {
-            n++;
-            m += scan->GetBinContent(bin);
+            m += scan->GetBinContent(bin); n++;
             if(verb) std::cout<<index<<"  "<<bin<<"  "<<scan->GetBinContent(bin)<<std::endl;
         }
         if(verb) std::cout<<n<<std::endl;
@@ -180,13 +177,13 @@ void processPlugins(const std::string& plugin, const std::string& file, const st
     std::vector<double> ratio;
     std::vector<double> knownRatio;
     double meanMax = *max_element(mean.begin(), mean.end());
-    double knownMax = *max_element(known.begin(), known.end());
+    double knownMax = *max_element(pluginInfo.known.begin(), pluginInfo.known.end());
 
-    for(int index = 0; index < known.size(); index++)
+    for(int index = 0; index < pluginInfo.known.size(); index++)
     {
-        if(verb) std::cout<<"Measured: "<<mean[index]<<"  Ref: "<<known[index]<<std::endl;
+        if(verb) std::cout<<"Measured: "<<mean[index]<<"  Ref: "<<pluginInfo.known[index]<<std::endl;
         ratio.push_back(mean[index]/meanMax);
-        knownRatio.push_back( known[index] / knownMax );
+        knownRatio.push_back( pluginInfo.known[index] / knownMax );
     }
     
     int n = ratio.size();
@@ -199,10 +196,9 @@ void processPlugins(const std::string& plugin, const std::string& file, const st
     }
 
     TGraph* gFit = new TGraph (n, x, y);
+    
+    fitHisto(pluginInfo, gFit);
 
-    fitHisto(plugin, gFit, histName, runNum);
-
-    delete pluginInfo;
     delete gFit;
 }
 
@@ -246,7 +242,7 @@ int main(int argc, char *argv[])
         for(int ch = 0; ch < chNum; ch++)
         {
             //std::cout<<"TS_3_Charge_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_" + fib + "_Ch_" + std::to_string(ch) + "_1D"<<std::endl;
-            processPlugins(pluginType, runFile, "TS_3_Charge_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch)+"_1D", runNum, false);
+            processPlugins(pluginType, runFile, "TS_3_Charge_vs_EvtNum_","FED_1776_Crate_41_Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch), "_1D", runNum, false);
         }
     }
 }
