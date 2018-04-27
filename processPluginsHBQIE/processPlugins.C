@@ -1,13 +1,9 @@
-//#include "TROOT.h"
-//#include "TObject.h"
 #include "TH1.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TLegend.h"
 #include "TMath.h"
 #include "TFile.h"
-//#include "TDirectory.h"
-//#include "TList.h"
 #include "TLatex.h"
 #include "TGraph.h"
 #include "TSystem.h"
@@ -50,7 +46,7 @@ void fitHisto(const PluginSummary& pluginInfo, TGraph* hfit)
     leg->SetTextSize(0.03);
     leg->SetBorderSize(0);
     leg->SetFillStyle(0);
-    leg->AddEntry(hfit,"Setting","P");
+    leg->AddEntry(hfit,"Scan Setting","P");
     //c1.SetLogx();
     //c1.SetLogy();
     TH1* temp = new TH1F("dummy","dummy",10,0,1);
@@ -60,14 +56,13 @@ void fitHisto(const PluginSummary& pluginInfo, TGraph* hfit)
     temp->SetMaximum(1.00001);
     temp->SetStats(false);
     temp->SetTitle(0);
-    //temp->SetTitle( (pluginInfo.plugin+"  "+pluginInfo.histName).c_str() );
     temp->SetLineColor(kBlack);
     temp->GetYaxis()->SetTitle(pluginInfo.histNameY.c_str());
     temp->GetXaxis()->SetTitle(pluginInfo.histNameX.c_str());
     temp->SetTitleOffset(1,"X");
     temp->SetTitleOffset(1.2,"Y");
-    temp->SetTitleSize(0.05,"X");
-    temp->SetTitleSize(0.05,"Y");
+    temp->SetTitleSize(0.04,"X");
+    temp->SetTitleSize(0.04,"Y");
     temp->Draw();
     c1->Modified();
     hfit->SetLineWidth(3);
@@ -120,7 +115,7 @@ void fitHisto(const PluginSummary& pluginInfo, TGraph* hfit)
     mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13        ),  chi2);
     mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.03 ), slope);
     mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.06 ),     b);    
-    mark.SetTextSize(0.035);
+    mark.SetTextSize(0.031);
     mark.SetTextFont(1);
     mark.DrawLatex( 0.09, 0.95, pluginInfo.histName.c_str());
     
