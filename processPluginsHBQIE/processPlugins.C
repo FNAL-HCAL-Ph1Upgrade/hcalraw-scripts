@@ -19,6 +19,32 @@
 #include <iostream>
 #include <string>
 
+class PluginInfo
+{
+protected:
+    std::vector<double> known = {0.0};
+public:
+    virtual std::vector<double> getKnown() {return known;}
+};
+
+class iQi_GselScan : public PluginInfo
+{
+private:
+    std::vector<double> known = {1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65};
+public:
+    std::vector<double> getKnown() {return known;}
+
+};
+
+class iQiScan : public PluginInfo
+{
+private:
+    std::vector<double> known = {90, 180, 360, 720, 1440, 2880, 5760, 8640}; 
+public:
+    std::vector<double> getKnown() {return known;}
+};
+
+
 double lineFun(double* x, double* p)
 {
     //p[0]: Slope of the line
@@ -119,19 +145,22 @@ void processPlugins(const std::string& plugin, const std::string& file, const st
 {
     TH1::AddDirectory(false);
     gROOT->SetStyle("Plain");
-
+    
     TFile *f = TFile::Open( file.c_str() );
     TH1* scan = (TH1*)f->Get( histName.c_str() );
     
-    std::vector<double> known;
+    PluginInfo* pluginInfo = nullptr;
     if(plugin == "iQi_GselScan")
     {
-        known = {1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65};
+        pluginInfo = new iQi_GselScan();
     }
     else if(plugin == "iQiScan")
     {
-        known = {90, 180, 360, 720, 1440, 2880, 5760, 8640};        
+        pluginInfo = new iQiScan();
     }
+
+    std::vector<double> known = pluginInfo->getKnown();
+    std::cout<<known.size()<<std::endl;
     
     std::vector<double> mean;
     for(int index = 0; index < known.size(); index++)
@@ -173,6 +202,7 @@ void processPlugins(const std::string& plugin, const std::string& file, const st
 
     fitHisto(plugin, gFit, histName, runNum);
 
+    delete pluginInfo;
     delete gFit;
 }
 
