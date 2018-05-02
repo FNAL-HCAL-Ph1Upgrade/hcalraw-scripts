@@ -75,14 +75,14 @@ void fitHisto(const PluginSummary& pluginInfo, TGraph* hfit)
     //////////////////////
     //Fitting info
     //////////////////////
-                                                     
-    double min1   =   0; double max1   = 200;   
-    double min2   =  -1; double max2   =   1;   
-    double set1   =   6;                         
+
+    double min1   =   0; double max1   =  2;   
+    double min2   =  -1; double max2   =  1;   
+    double set1   =   1;                         
     double set2   =   0;
     double fitmin =   0; double fitmax = 1;
     
-    TF1* fit1 = new TF1("line", lineFun, 0.0, 1.0, 3);
+    TF1* fit1 = new TF1("line", lineFun, fitmin, fitmax, 3);
     fit1->SetParLimits(0, min1, max1); 
     fit1->SetParLimits(1, min2, max2); 
     fit1->SetParameter(0, set1);
@@ -130,11 +130,11 @@ void fitHisto(const PluginSummary& pluginInfo, TGraph* hfit)
 
 void processPlugins(const std::string& plugin, const std::string& file,
                     const std::string& histVar,const std::string& histName,
-                    const std::string& histD,  const std::string& runNum, const bool verb = true)
+                    const std::string& runNum, const bool verb = true)
 {
     TH1::AddDirectory(false);
     TFile* f = TFile::Open( file.c_str() );
-    TH1* scan = (TH1*)f->Get( (histVar+histName+histD).c_str() );
+    TH1* scan = (TH1*)f->Get( (histVar+histName).c_str() );
 
     f->Close();
     delete f;
@@ -236,8 +236,8 @@ int main(int argc, char *argv[])
     {
         for(int ch = 0; ch < chNum; ch++)
         {
-            //std::cout<<"TS_3_Charge_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_" + fib + "_Ch_" + std::to_string(ch) + "_1D"<<std::endl;
-            processPlugins(pluginType, runFile, "TS_3_Charge_vs_EvtNum_","FED_1776_Crate_41_Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch), "_1D", runNum, false);
+            //std::cout << "TS_3_Charge_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_" + fib + "_Ch_" + std::to_string(ch) << std::endl;
+            processPlugins(pluginType, runFile, "TS_3_Charge_vs_EvtNum_","FED_1776_Crate_41_Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch), runNum, false);
         }
     }
 }
