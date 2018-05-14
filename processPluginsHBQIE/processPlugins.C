@@ -55,8 +55,7 @@ double lineFun(double* x, double* p)
     return p[0]*x[0] + p[1];
 }
 
-void fitHisto(const PluginSummary& p, TGraph* hfit)
-//void fitHisto(const PluginSummary& p, TGraphErrors* hfit)
+template<typename G> void fitHisto(const PluginSummary& p, G* hfit)
 {
     TCanvas* c1 = new TCanvas("c1","c1",800,800);
     gPad->SetTopMargin(0.1);
@@ -142,7 +141,7 @@ void fitHisto(const PluginSummary& p, TGraph* hfit)
     delete fit1;
 }
 
-void processPlugins(const RunSummary& r, const bool verb = true)
+void processPlugins(const RunSummary& r, const std::string& gType = "", const bool verb = true)
 {
     TH1::AddDirectory(false);
     TFile* f = TFile::Open( r.file.c_str() );
@@ -163,6 +162,7 @@ void processPlugins(const RunSummary& r, const bool verb = true)
     else if(r.plugin == "iQiScan")
     {
         p = {
+            //{90, 180, 360, 620, 1540, 2880, 5760, 8640}, //test
             {90, 180, 360, 720, 1440, 2880, 5760, 8640},
             r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", r.runNum, 100,
             0, 2, -1, 1, 1, 0, 0, 1
@@ -183,15 +183,11 @@ void processPlugins(const RunSummary& r, const bool verb = true)
         mean.push_back( m/n );
         rms.push_back( sqrt(m2/n) );
         if( sqrt(m2/n) - m/n > 0)
-        {
             sigma.push_back( sqrt( sqrt(m2/n) - m/n) );
-        }
         else
-        {
             sigma.push_back(0);
-        }
     }
-
+    
     std::vector<double> ratio, ratioError;
     std::vector<double> knownRatio;
     double meanMax = *max_element(mean.begin(), mean.end());
@@ -210,15 +206,18 @@ void processPlugins(const RunSummary& r, const bool verb = true)
     for(int i = 0; i < ratio.size(); i++)
     {
         x[i] = ratio[i]; ex[i] = ratioError[i];
-        y[i] = knownRatio[i]; ey[i] = 0;
+        y[i] = knownRatio[i]; ey[i] = 0.01;
         if(verb) std::cout<<x[i]<<" +/- "<<ex[i]<<" "<<y[i]<<" +/- "<<ey[i]<<std::endl;
     }
-
-    TGraph* gFit = new TGraph (n, x, y);
-    //TGraphErrors* gFit = new TGraphErrors (n, x, y, ex, ey);
     
-    fitHisto(p, gFit);
-
+    TGraphErrors* gFit = nullptr;
+    if(gType == "")
+        gFit = static_cast<TGraphErrors*>( new TGraph (n, x, y) );    
+    else if(gType == "Error")
+        gFit = new TGraphErrors (n, x, y, ex, ey);
+    
+    fitHisto<TGraphErrors>(p, gFit);
+    
     delete gFit;
 }
 
@@ -266,7 +265,8 @@ int main(int argc, char *argv[])
         {
             //std::cout << "TS_3_Charge_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_" + fib + "_Ch_" + std::to_string(ch) << std::endl;
             RunSummary r = {pluginType, runFile, "TS_3_Charge_vs_EvtNum_", "FED_1776_Crate_41_Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch), runNum};
-            processPlugins(r, true);
+            //processPlugins(r, "", false);
+            processPlugins(r, "Error", false);
         }
     }
 }
