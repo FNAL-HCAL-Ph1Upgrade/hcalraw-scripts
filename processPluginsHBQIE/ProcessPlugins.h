@@ -40,7 +40,7 @@ private:
         int nEvents;
         bool verb;
 
-        //Info for line fit
+        //Info for main line fit
         double min1;
         double max1;
         double min2;
@@ -49,6 +49,17 @@ private:
         double set2;
         double fitmin;
         double fitmax;
+
+        //Info for second line fit
+        bool second;
+        double min12;
+        double max12;
+        double min22;
+        double max22;
+        double set12;
+        double set22;
+        double fitmin2;
+        double fitmax2;
 
         //Graph info
         double gxmin, gxmax, gymin, gymax;
@@ -67,6 +78,33 @@ private:
         //p[0]: Slope of the line
         //p[1]: y-intercept of the line
         return p[0]*x[0] + p[1];
+    }
+
+    void printFitInfo(TF1* fit)
+    {
+        printf(
+            "Chi^2:%10.4f, P0:%8.4f +/- %8.4f  P1:%8.4f +/- %8.4f\n",
+            fit->GetChisquare(), fit->GetParameter(0), fit->GetParError(0), fit->GetParameter(1), fit->GetParError(1)
+            );                
+    }
+
+    void drawFitInfo(TF1* fit, double x, double y)
+    {
+        char chi2[100], slope[100], b[100];
+        std::string fix = "";
+        if(fit->GetParameter(1) < 0) fix = " ";
+        
+        sprintf(chi2,  "#chi^{2} %18s %.3f"             , "", fit->GetChisquare() );
+        sprintf(slope, "slope %10s %s %.3f #pm %.3f"    , "", fix.c_str(), fit->GetParameter(0), fit->GetParError(0));
+        sprintf(b,     "y-intercept %2s %.3f #pm %.3f"  , "", fit->GetParameter(1), fit->GetParError(1));
+
+        TLatex mark;
+        mark.SetNDC(true);
+        mark.SetTextAlign(11);
+        mark.SetTextSize(0.030);
+        mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y        ),  chi2);
+        mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.03 ), slope);
+        mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.06 ),     b);    
     }
     
     template<typename G> void fitHisto(const PluginSummary& p, G* hfit)
@@ -105,6 +143,13 @@ private:
         hfit->Draw("same PE");
         //hfit->Draw("same AP");
         leg->Draw();
+
+        TLatex mark;
+        mark.SetNDC(true);
+        mark.SetTextAlign(11);
+        mark.SetTextSize(0.031);
+        mark.SetTextFont(1);
+        mark.DrawLatex( 0.09, 0.95, p.histName.c_str());
     
         //////////////////////
         //Fitting info
@@ -119,32 +164,24 @@ private:
         hfit->Fit(fit1, "RQM", "", p.fitmin, p.fitmax);
         fit1->Draw("same");
         leg->AddEntry(fit1,"Linear Fit","l");
-    
-        printf(
-            "Chi^2:%10.4f, P0:%8.4f +/- %8.4f  P1:%8.4f +/- %8.4f\n",
-            fit1->GetChisquare(), fit1->GetParameter(0), fit1->GetParError(0), fit1->GetParameter(1), fit1->GetParError(1)
-            );
-
-        char chi2[100];
-        char slope[100];
-        char b[100];
-        std::string fix = "";
-        if(fit1->GetParameter(1) < 0) fix = " ";
+        drawFitInfo(fit1, 0.1, 0.13);
+        if(p.verb) printFitInfo(fit1);
         
-        sprintf(chi2,  "#chi^{2} %18s %.3f"             , "", fit1->GetChisquare() );
-        sprintf(slope, "slope %10s %s %.3f #pm %.3f"    , "", fix.c_str(), fit1->GetParameter(0), fit1->GetParError(0));
-        sprintf(b,     "y-intercept %2s %.3f #pm %.3f"  , "", fit1->GetParameter(1), fit1->GetParError(1));
-
-        TLatex mark;
-        mark.SetNDC(true);
-        mark.SetTextAlign(11);
-        mark.SetTextSize(0.030);
-        mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13        ),  chi2);
-        mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.03 ), slope);
-        mark.DrawLatex( gPad->GetLeftMargin() + 0.1, 1 - (gPad->GetTopMargin() + 0.13 + 0.06 ),     b);    
-        mark.SetTextSize(0.031);
-        mark.SetTextFont(1);
-        mark.DrawLatex( 0.09, 0.95, p.histName.c_str());
+        if(p.second)
+        {
+            TF1* fit2 = new TF1("line2", lineFun, p.fitmin2, p.fitmax2, 2);
+            fit2->SetParLimits(0, p.min12, p.max12); 
+            fit2->SetParLimits(1, p.min22, p.max22); 
+            fit2->SetParameter(0, p.set12);
+            fit2->SetParameter(1, p.set22);
+            fit2->SetLineWidth(2);
+            fit2->SetLineColor(kBlue);
+            hfit->Fit(fit2, "RQM", "", p.fitmin2, p.fitmax2);
+            fit2->Draw("same");
+            leg->AddEntry(fit2,"Linear Fit","l");
+            drawFitInfo(fit2, 0.1, 0.23);
+            if(p.verb) printFitInfo(fit2);
+        }
     
         gSystem->Exec( ("mkdir -p run"+p.runNum+"/").c_str() ) ;
         c1->Print(("run"+p.runNum+"/"+p.histName+".png").c_str());
@@ -232,6 +269,7 @@ public:
                 {1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65},
                 r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Measured Gain", "Reference Gain", r.runNum, 100, verb,
                 0, 2, -1, 1, 1, 0, 0, 1,
+                false, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 1, 0.00000001, 1.00001,
             };
         }
@@ -242,6 +280,7 @@ public:
                 {90, 180, 360, 720, 1440, 2880, 5760, 8640},
                 r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", r.runNum, 100, verb,
                 0, 2, -1, 1, 1, 0, 0, 1,
+                false, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 1, 0.00000001, 1.00001,
             };
         }
@@ -251,7 +290,18 @@ public:
                 {},
                 r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb,
                 0, 20, -100, 10, 1, 0, 33, 65,
+                false, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 66, 0, 100,
+            };
+        }
+        else if(r.plugin == "CapIDpedestalScan")
+        {
+            p = {
+                {},
+                r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb,
+                0, 20, -100, 10, 1, 0, 9, 16,
+                true, -20, 0, -10, 100, -1, 0, 1, 8,
+                0, 17, 0, 50,
             };
         }
 
@@ -286,7 +336,7 @@ public:
                 processRatios<TGraphErrors>(p);
             }
         }
-        else if(r.plugin == "pedScan")
+        else if(r.plugin == "pedScan" || r.plugin == "CapIDpedestalScan")
         {
             if(gType == "")
             {

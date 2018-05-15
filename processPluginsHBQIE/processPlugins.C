@@ -45,14 +45,16 @@ int main(int argc, char *argv[])
     const std::vector<const std::string>& SLOT2_FIBERS = {"0"};
     const int chNum = 1;
 
-    //const std::string& firstPart = "TS_3_Charge_vs_EvtNum_";
-    const std::string& firstPart = "Charge_vs_EvtNum_";
+    std::string firstPart;
+    if(pluginType == "iQi_GselScan" || pluginType == "iQiScan") firstPart = "TS_3_Charge_vs_EvtNum_";
+    else if(pluginType == "pedScan") firstPart = "Charge_vs_EvtNum_";
+    else if(pluginType == "CapIDpedestalScan") firstPart = "CapID_1_Charge_vs_EvtNum_";
     
     for(const auto& fib : SLOT2_FIBERS)
     {
         for(int ch = 0; ch < chNum; ch++)
         {
-            std::cout << "TS_3_Charge_vs_EvtNum_FED_1776_Crate_41_Slot_2_Fib_" + fib + "_Ch_" + std::to_string(ch) << std::endl;
+            std::cout << firstPart+"FED_1776_Crate_41_Slot_2_Fib_" + fib + "_Ch_" + std::to_string(ch) << std::endl;
             RunSummary r = {pluginType, runFile, firstPart, "FED_1776_Crate_41_Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch), runNum};
             ProcessPlugins p;
             //p.processPlugins(r, "", false);
