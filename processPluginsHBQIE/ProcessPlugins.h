@@ -108,26 +108,27 @@ private:
             );                
     }
 
-    void drawFitInfo(TF1* fit, const std::vector<std::string>& pram, double x, double y)
+    void drawFitInfo(TF1* fit, const std::vector<std::string>& names ,double x, double y)
     {
+        char chi2[100];
         TLatex mark;
         mark.SetNDC(true);
         mark.SetTextAlign(11);
         mark.SetTextSize(0.030);
         
-        for()
-        {
-            char chi2[100], slope[100], b[100];
-            std::string fix = "";
-            if(fit->GetParameter(1) < 0) fix = " ";
+        std::string fix = "";
+        if(fit->GetParameter(1) < 0) fix = " ";
         
-            sprintf(chi2,  "#chi^{2} %18s %.3f"             , "", fit->GetChisquare() );
-            sprintf(slope, "slope %10s %s %.3f #pm %.3f"    , "", fix.c_str(), fit->GetParameter(0), fit->GetParError(0));
-            sprintf(b,     "y-intercept %2s %.3f #pm %.3f"  , "", fit->GetParameter(1), fit->GetParError(1));
-
-            mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y        ),  chi2);
-            mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.03 ), slope);
-            mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.06 ),     b);    
+        sprintf(chi2,  "#chi^{2} %18s %.3f"             , "", fit->GetChisquare() );
+        mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y ), chi2);
+        
+        int index = -1;
+        for(const auto& name : names)
+        {
+            index++;
+            char ch[100];
+            sprintf(ch, "%s %10s %.3f #pm %.3f"    ,name.c_str(), "", fit->GetParameter(index), fit->GetParError(index));
+            mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.03*(index+1) ), ch);
         }
     }
     
@@ -179,12 +180,14 @@ private:
         //Fitting info
         //////////////////////
         TF1* fit1 = nullptr;
+        std::vector<std::string> names = {"slope","y-intercept"};
         if (p->plugin == "iQi_phaseScan")
         {
             fit1 = new TF1("exp", expFunDecay, p->fitmin, p->fitmax, 3);
             fit1->SetParLimits(2, p->min3, p->max3); 
             fit1->SetParameter(2, p->set3);
             //fit1->FixParameter(2, p->set3);
+            names = {"norm","time const","phase"};
         }
         else
             fit1 = new TF1("line", lineFun, p->fitmin, p->fitmax, 2);
@@ -198,8 +201,8 @@ private:
         fit1->SetLineColor(kRed);
         hfit->Fit(fit1, "RQM", "", p->fitmin, p->fitmax);
         fit1->Draw("same");
-        leg->AddEntry(fit1,"Linear Fit","l");
-        drawFitInfo(fit1, 0.1, 0.13);
+        leg->AddEntry(fit1,"Fit","l");
+        drawFitInfo(fit1, names, 0.1, 0.13);
         if(p->verb) printFitInfo(fit1);
         
         if(p->second)
@@ -211,6 +214,7 @@ private:
                 fit2->SetParLimits(2, p->min32, p->max32); 
                 fit2->SetParameter(2, p->set32);
                 //fit2->FixParameter(2, p->set32);
+                names = {"norm","time const","phase"};
             }
             else
                 fit2 = new TF1("line2", lineFun, p->fitmin2, p->fitmax2, 2);
@@ -222,8 +226,8 @@ private:
             fit2->SetLineColor(kBlue);
             hfit->Fit(fit2, "RQM", "", p->fitmin2, p->fitmax2);
             fit2->Draw("same");
-            leg->AddEntry(fit2,"Linear Fit","l");
-            drawFitInfo(fit2, 0.1, 0.23);
+            leg->AddEntry(fit2,"Fit","l");
+            drawFitInfo(fit2, names, 0.1, 0.25);
             if(p->verb) printFitInfo(fit2);
         }
     
@@ -382,29 +386,29 @@ public:
             TH1* s2 = (TH1*)f->Get( ("TS_2_"+r.histVar+r.histName).c_str() );
             TH1* s3 = (TH1*)f->Get( ("TS_3_"+r.histVar+r.histName).c_str() );
             p1->set({},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
-                    2000, 3000, 2400, -6, -4, -5, 25, 26, 25.5, 21, 40,
-                    false,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 114, 0, 9000
+                   r.plugin, "TS_1_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
+                    0, 100, 0, -6, -4, -5, 0, 100, 50, 0, 72,
+                    true,
+                    6000, 7000, 6500, -6, -4, -5, 0, 100, 50, 72, 110,
+                    0, 114, 0, 12000
                 );
             p2->set({},
-                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s2,
+                    r.plugin, "TS_2_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s2,
                     6000, 7000, 6500, -100, -4, -5, 0, 100, 50, 55, 90,
                     true,
                     6000, 7000, 6500, -6, -4, -5, 0, 100, 50, 22, 55,
-                    0, 114, 0, 11000
+                    0, 114, 0, 12000
                 );
             p3->set({},
-                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s3,
+                    r.plugin, "TS_3_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s3,
                     6000, 7000, 6500, -100, -3, -5, 0, 30, 25.5, 0, 40,
                     false,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 114, 0, 9000
+                    0, 114, 0, 12000
                 );
-            //pVec.push_back(p1);
+            pVec.push_back(p1);
             pVec.push_back(p2);
-            //pVec.push_back(p3);
+            pVec.push_back(p3);
         }
         f->Close();
         delete f;

@@ -42,12 +42,12 @@ int main(int argc, char *argv[])
     //const std::vector<const std::string>& SLOT2_FIBERS = {"0", "1", "2", "3", "4", "5", "7", "8"};
     //const int chNum = 8;
 
-    const std::vector<const std::string>& SLOT2_FIBERS = {"0"};
+    const std::vector<const std::string>& SLOT2_FIBERS = {"2"};
     const int chNum = 1;
 
     std::string firstPart;
     if(pluginType == "iQi_GselScan" || pluginType == "iQiScan") firstPart = "TS_3_Charge_vs_EvtNum_";
-    else if(pluginType == "pedScan") firstPart = "Charge_vs_EvtNum_";
+    else if(pluginType == "pedScan" || pluginType == "iQi_phaseScan") firstPart = "Charge_vs_EvtNum_";
     else if(pluginType == "CapIDpedestalScan") firstPart = "CapID_1_Charge_vs_EvtNum_";
     
     for(const auto& fib : SLOT2_FIBERS)
