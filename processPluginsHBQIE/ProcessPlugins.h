@@ -38,13 +38,14 @@ private:
         bool verb;
         TH1* scan;
         //Info for main line fit
-        double min1, max1, set1, min2, max2, set2, min3, max3, set3, fitmin, fitmax;
+        double min1, max1, set1, min2, max2, set2, min3, max3, set3, min4, max4, set4, fitmin, fitmax;
         //Info for second line fit
         bool second;
         double min12, max12, set12, min22, max22, set22, min32, max32, set32, fitmin2, fitmax2;
         //Graph info
         double gxmin, gxmax, gymin, gymax;
         std::vector<double> mean, rms, sigma;
+        bool doMeanTS;
         
         void setGraphInfo(std::vector<double> m, std::vector<double> r, std::vector<double> s)
         {
@@ -55,20 +56,23 @@ private:
         
         void set(std::vector<double> known_, std::string plugin_, std::string histName_, std::string histNameX_, std::string histNameY_, std::string runNum_,
                  int nEvents_, bool verb_, TH1* scan_,
-                 double min1_,  double max1_,  double set1_,  double min2_,  double max2_,  double set2_,  double min3_,  double max3_,  double set3_,  double fitmin_,  double fitmax_,
+                 double min1_,  double max1_,  double set1_,  double min2_,  double max2_,  double set2_,  double min3_,  double max3_,  double set3_,  double min4_, double max4_, double set4_, double fitmin_,  double fitmax_,
                  bool second_,
                  double min12_, double max12_, double set12_, double min22_, double max22_, double set22_, double min32_, double max32_, double set32_, double fitmin2_, double fitmax2_,
                  double gxmin_, double gxmax_, double gymin_, double gymax_)
         {
             known = known_; plugin = plugin_; histName = histName_; histNameX = histNameX_; histNameY = histNameY_; runNum = runNum_; 
             nEvents = nEvents_; verb = verb_; scan = scan_; 
-            min1 = min1_;   max1 = max1_;   set1 = set1_;   min2 = min2_;   max2 = max2_;   set2 = set2_;   min3 = min3_;   max3 = max3_;   set3 = set3_;   fitmin = fitmin_; fitmax = fitmax_; 
+            min1 = min1_;   max1 = max1_;   set1 = set1_;   min2 = min2_;   max2 = max2_;   set2 = set2_;   min3 = min3_;   max3 = max3_;   set3 = set3_;   min4 = min4_; max4 = max4_; set4 = set4_; fitmin = fitmin_; fitmax = fitmax_; 
             second = second_;
             min12 = min12_; max12 = max12_; set12 = set12_; min22 = min22_; max22 = max22_; set22 = set22_; min32 = min32_; max32 = max32_; set32 = set32_; fitmin2 = fitmin2_; fitmax2 = fitmax2_; 
             gxmin = gxmin_; gxmax = gxmax_; gymin = gymin_; gymax = gymax_; 
         }
 
-        PluginSummary() : scan(nullptr)
+        //template<typename t> void setVar(t var, const std::string& varName) {varName = }
+        void setMeanTS(bool m) {doMeanTS = m;}
+        
+        PluginSummary() : scan(nullptr), doMeanTS(false)
         {
         }
         ~PluginSummary()
@@ -84,6 +88,27 @@ private:
         return p[0]*x[0] + p[1];
     }
 
+    static double meanTS(double* x, double* p)
+    {
+        //p[0]: First time slice
+        //p[1]: time const
+        //p[2]: First phase
+        //p[3]: Second phase
+        double val = 0;
+        if(x[0] < p[2] + 1)
+            val = p[0]; 
+        else if(p[2] < x[0] && x[0] < p[3] - 1)
+            val = p[0]*exp((x[0]-p[2])/p[1]);
+        else if(p[3] - 1 < x[0] && x[0] < 70)
+            val = 2;
+        else if(70 < x[0] && x[0] < 80)
+            val = 2*exp((x[0]-70)/p[1]);
+        else
+            val = 1;
+            
+        return val;
+    }
+        
     static double expFunDecay(double* x, double* p)
     {
         //p[0]: norm
@@ -127,7 +152,7 @@ private:
         {
             index++;
             char ch[100];
-            sprintf(ch, "%s %10s %.3f #pm %.3f"    ,name.c_str(), "", fit->GetParameter(index), fit->GetParError(index));
+            sprintf(ch, "%s %18s %.3f #pm %.3f"    ,name.c_str(), "", fit->GetParameter(index), fit->GetParError(index));
             mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.03*(index+1) ), ch);
         }
     }
@@ -183,11 +208,22 @@ private:
         std::vector<std::string> names = {"slope","y-intercept"};
         if (p->plugin == "iQi_phaseScan")
         {
-            fit1 = new TF1("exp", expFunDecay, p->fitmin, p->fitmax, 3);
-            fit1->SetParLimits(2, p->min3, p->max3); 
-            fit1->SetParameter(2, p->set3);
-            //fit1->FixParameter(2, p->set3);
-            names = {"norm","time const","phase"};
+            if(p->doMeanTS)
+            {
+                fit1 = new TF1("exp", meanTS, p->fitmin, p->fitmax, 4);
+                fit1->SetParLimits(2, p->min3, p->max3); 
+                fit1->SetParameter(2, p->set3);
+                fit1->SetParLimits(3, p->min4, p->max4); 
+                fit1->SetParameter(3, p->set4);
+                names = {"TS3","time const","phase 1","phase 2"};
+            }
+            else
+            {
+                fit1 = new TF1("exp", expFunDecay, p->fitmin, p->fitmax, 3);
+                fit1->SetParLimits(2, p->min3, p->max3); 
+                fit1->SetParameter(2, p->set3);
+                names = {"norm","time const","phase"};                
+            }
         }
         else
             fit1 = new TF1("line", lineFun, p->fitmin, p->fitmax, 2);
@@ -204,16 +240,15 @@ private:
         leg->AddEntry(fit1,"Fit","l");
         drawFitInfo(fit1, names, 0.1, 0.13);
         if(p->verb) printFitInfo(fit1);
-        
+
+        TF1* fit2 = nullptr;
         if(p->second)
         {
-            TF1* fit2 = nullptr;
             if (p->plugin == "iQi_phaseScan")
             {
                 fit2 = new TF1("exp2", expFunRise, p->fitmin2, p->fitmax2, 3);
                 fit2->SetParLimits(2, p->min32, p->max32); 
                 fit2->SetParameter(2, p->set32);
-                //fit2->FixParameter(2, p->set32);
                 names = {"norm","time const","phase"};
             }
             else
@@ -238,6 +273,7 @@ private:
         delete leg;
         delete temp;
         delete fit1;
+        delete fit2;
     }
 
     template<typename G> G* makeTGraph(const PluginSummary* p,
@@ -318,6 +354,32 @@ private:
             delete gFit1;
         }
     }
+    
+    template<typename G> void processPhaseScan(PluginSummary* p, const std::vector<PluginSummary*>& pVec)
+    {
+        std::vector<double> x, y, xError, yError;
+        std::vector<double> timeSlice = {1, 2, 3};
+        p->setMeanTS(true);
+        for(int t = 0; t < pVec[0]->mean.size(); t++)
+        {
+            double num = 0;
+            double den = 0;
+            int index = -1;
+            for(auto* p : pVec)
+            {
+                index++;
+                num += timeSlice[index]*p->mean[t];
+                den += p->mean[t];
+            }
+            x.push_back(t); y.push_back(num/den);
+            xError.push_back(0.1); yError.push_back(0.1);
+            //std::cout<<num/den<<std::endl;
+        }
+        G* gFit = makeTGraph<G>(p, x, xError, y, yError);
+        fitHisto<G>(p, gFit);
+
+        delete gFit;
+    }
         
 public:
     void processPlugins(const RunSummary& r, const std::string& gType = "", const bool verb = true)
@@ -325,14 +387,15 @@ public:
         TH1::AddDirectory(false);
         TFile* f = TFile::Open( r.file.c_str() );
         std::vector<PluginSummary*> pVec;
-
+        PluginSummary* phaseInfo = nullptr;
+        
         if(r.plugin == "iQi_GselScan")
         {
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.histName).c_str() );
             p->set({1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Measured Gain", "Reference Gain", r.runNum, 100, verb, s,
-                   0, 2, 1, -1, 1, 0, 0, 0, 0, 0, 1,
+                   0, 2, 1, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                    false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                    0, 1, 0.00000001, 1.00001
                 );
@@ -345,7 +408,7 @@ public:
             p->set({90, 180, 360, 720, 1440, 2880, 5760, 8640},
                    //{90, 180, 360, 62, 15400, 2880, 5760, 8640}, //test
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", r.runNum, 100, verb, s,
-                   0, 2, 1, -1, 1, 0, 0, 0, 0, 0, 1,
+                   0, 2, 1, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                    false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                    0, 1, 0.00000001, 1.00001
                 );
@@ -357,7 +420,7 @@ public:
             TH1* s = (TH1*)f->Get( (r.histVar+r.histName).c_str() );
             p->set({},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s,
-                   0, 20, 10, -100, 1, 0, 0, 0, 0, 33, 65,
+                   0, 20, 10, -100, 1, 0, 0, 0, 0, 0, 0, 0, 33, 65,
                    false,
                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                    0, 66, 0, 100
@@ -370,7 +433,7 @@ public:
             TH1* s = (TH1*)f->Get( (r.histVar+r.histName).c_str() );
             p->set({},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s,
-                   0, 20, 1, -100, 10, 0, 0, 0, 0, 9, 16,
+                   0, 20, 1, -100, 10, 0, 0, 0, 0, 0, 0, 0, 9, 16,
                    true,
                    -20, 0, -1, -10, 100, 0, 0, 0, 0, 1, 8,
                    0, 17, 0, 50
@@ -386,22 +449,22 @@ public:
             TH1* s2 = (TH1*)f->Get( ("TS_2_"+r.histVar+r.histName).c_str() );
             TH1* s3 = (TH1*)f->Get( ("TS_3_"+r.histVar+r.histName).c_str() );
             p1->set({},
-                   r.plugin, "TS_1_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
-                    0, 100, 0, -6, -4, -5, 0, 100, 50, 0, 72,
+                    r.plugin, "TS_1_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
+                    0, 100, 0, -6, -4, -5, 0, 100, 50, 0, 0, 0, 0, 72,
                     true,
                     6000, 7000, 6500, -6, -4, -5, 0, 100, 50, 72, 110,
                     0, 114, 0, 12000
                 );
             p2->set({},
                     r.plugin, "TS_2_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s2,
-                    6000, 7000, 6500, -100, -4, -5, 0, 100, 50, 55, 90,
+                    6000, 7000, 6500, -100, -4, -5, 0, 100, 50, 0, 0, 0, 55, 90,
                     true,
                     6000, 7000, 6500, -6, -4, -5, 0, 100, 50, 22, 55,
                     0, 114, 0, 12000
                 );
             p3->set({},
                     r.plugin, "TS_3_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s3,
-                    6000, 7000, 6500, -100, -3, -5, 0, 30, 25.5, 0, 40,
+                    6000, 7000, 6500, -100, -3, -5, 0, 30, 25.5, 0, 0, 0, 0, 40,
                     false,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 114, 0, 12000
@@ -409,6 +472,19 @@ public:
             pVec.push_back(p1);
             pVec.push_back(p2);
             pVec.push_back(p3);
+
+        //p[0]: First time slice
+        //p[1]: time const
+        //p[2]: First phase
+        //p[3]: Second phase            
+            phaseInfo = new PluginSummary();
+            phaseInfo->set({},
+                           r.plugin, r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
+                           2, 4, 3, -30, -10, -15, 10, 25, 20, 25, 35, 30, 0, 114,
+                           false,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 114, 0, 5
+                );
         }
         f->Close();
         delete f;
@@ -453,9 +529,15 @@ public:
         else if(r.plugin == "iQi_phaseScan")
         {
             if(gType == "")
+            {
                 processPhaseScan<TGraph>(pVec);
+                processPhaseScan<TGraph>(phaseInfo, pVec);
+            }
             else if(gType == "Error")
+            {
                 processPhaseScan<TGraphErrors>(pVec);
+                processPhaseScan<TGraphErrors>(phaseInfo, pVec);
+            }
         }
         
         for(auto* p : pVec){delete p;}
