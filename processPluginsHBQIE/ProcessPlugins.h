@@ -101,6 +101,11 @@ private:
         return p[0]*x[0] + p[1];
     }
 
+    static double gamma(double x)
+    {
+        return 1 / (1 - exp(x));
+    }
+    
     static double meanTS(double* x, double* p)
     {
         //p[0]: switch 1
@@ -120,7 +125,16 @@ private:
             val = exp((x[0]-p[2])/p[5]) + 1;
         else
             val = 1;
-            
+        //if(x[0] < p[0] )
+        //    val = 3; 
+        //else if(p[0] < x[0] && x[0] < p[1])
+        //    val = gamma( (p[1]-p[0])/p[4] )*( exp((x[0]-p[0])/p[4]) - 1 );
+        //else if(p[1] < x[0] && x[0] < p[2])
+        //    val = 2;
+        //else if(p[2] < x[0] && x[0] < p[3])
+        //    val = gamma( (p[3]-p[2])/p[5] )*( exp((x[0]-p[2])/p[5]) - 1 );
+        //else
+        //    val = 1;            
         return val;
     }
         
@@ -506,7 +520,7 @@ public:
             p2->set({},
                     r.plugin, "Run"+r.runNum+"_TS_2_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s2,
                     true,
-                    6000,7000,6500, -100,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                    6000,7000,6500, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     55, 90,
                     true,
                     6000,7000,6500, -6,-4,-5, 0,100,50,
@@ -533,7 +547,7 @@ public:
             phaseInfo->set({},
                            r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge Weighted TS", r.runNum, 100, verb, s1,
                            true,
-                           21,23,22, 32,45,32, 65,75,70, 75,90,85, -30,-3,-25, -30,-3,-15,
+                           20,23,21, 30,45,33, 65,75,70, 75,90,85, -5.5,-3.5,-4, -5.5,-3.5,-4,
                            0, 114,
                            false,
                            0,0,0, 0,0,0, 0,0,0,
