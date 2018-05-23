@@ -37,28 +37,29 @@ int main(int argc, char *argv[])
         }
     }
 
-    const std::string& pluginType = split("first", split("last", runFile,"-") ,".root");
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
     //const std::vector<const std::string>& SLOT2_FIBERS = {"0", "1", "2", "3", "4", "5", "7", "8"};
     //const int chNum = 8;
-
     const std::vector<const std::string>& SLOT2_FIBERS = {"2"};
     const int chNum = 1;
 
-    std::string firstPart;
-    if(pluginType == "iQi_GselScan" || pluginType == "iQiScan") firstPart = "TS_3_Charge_vs_EvtNum_";
-    else if(pluginType == "pedScan" || pluginType == "iQi_phaseScan") firstPart = "Charge_vs_EvtNum_";
-    else if(pluginType == "CapIDpedestalScan") firstPart = "CapID_1_Charge_vs_EvtNum_";
-    
-    for(const auto& fib : SLOT2_FIBERS)
+    const std::vector<const std::string>& plugins = {"gselScan","iQiScan","pedestalScan","phaseScan","capID0pedestal", "capID1pedestal", "capID2pedestal", "capID3pedestal"};
+
+    for(const auto& plugin : plugins)
     {
-        for(int ch = 0; ch < chNum; ch++)
+        std::string firstPart = plugin + "_Charge_vs_EvtNum_";
+        if(plugin == "phaseScan") firstPart = "_Charge_vs_EvtNum_";
+
+        for(const auto& fib : SLOT2_FIBERS)
         {
-            std::cout << firstPart+"FED_1776_Crate_41_Slot_2_Fib_" + fib + "_Ch_" + std::to_string(ch) << std::endl;
-            RunSummary r = {pluginType, runFile, firstPart, "FED_1776_Crate_41_Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch), runNum};
-            ProcessPlugins p;
-            //p.processPlugins(r, "", false);
-            p.processPlugins(r, "Error", true);
+            for(int ch = 0; ch < chNum; ch++)
+            {
+                //std::cout << firstPart + "Slot_2_Fib_" + fib + "_Ch_" + std::to_string(ch) << std::endl;
+                RunSummary r = {plugin, runFile, firstPart, "Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch), runNum};
+                ProcessPlugins p;
+                //p.processPlugins(r, "", false);
+                p.processPlugins(r, "Error", false);
+            }
         }
     }
 }

@@ -38,41 +38,54 @@ private:
         bool verb;
         TH1* scan;
         //Info for main line fit
-        double min1, max1, set1, min2, max2, set2, min3, max3, set3, min4, max4, set4, fitmin, fitmax;
+        bool first;
+        double min1, max1, set1, min2, max2, set2, min3, max3, set3, min4, max4, set4;
+        double min5, max5, set5, min6, max6, set6; //,min7, max7, set7, min8, max8, set8,
+        double fitmin, fitmax;
         //Info for second line fit
         bool second;
         double min12, max12, set12, min22, max22, set22, min32, max32, set32, fitmin2, fitmax2;
         //Graph info
         double gxmin, gxmax, gymin, gymax;
-        std::vector<double> mean, rms, sigma;
+        std::vector<double> mean, rms, sigma, tdc;
         bool doMeanTS;
+        TH1* TDC;
         
-        void setGraphInfo(std::vector<double> m, std::vector<double> r, std::vector<double> s)
+        void setGraphInfo(std::vector<double> m, std::vector<double> r, std::vector<double> s, std::vector<double> t)
         {
             mean  = m;
             rms   = r;
             sigma = s;
+            tdc   = t;
         }
         
         void set(std::vector<double> known_, std::string plugin_, std::string histName_, std::string histNameX_, std::string histNameY_, std::string runNum_,
                  int nEvents_, bool verb_, TH1* scan_,
-                 double min1_,  double max1_,  double set1_,  double min2_,  double max2_,  double set2_,  double min3_,  double max3_,  double set3_,  double min4_, double max4_, double set4_, double fitmin_,  double fitmax_,
+                 bool first_,
+                 double min1_,  double max1_,  double set1_,  double min2_,  double max2_,  double set2_,  double min3_,  double max3_,  double set3_,  double min4_, double max4_, double set4_,
+                 double min5_,  double max5_,  double set5_,  double min6_,  double max6_,  double set6_,  /*double min7_,  double max7_,  double set7_,  double min8_, double max8_, double set8_,*/
+                 double fitmin_,  double fitmax_,
                  bool second_,
                  double min12_, double max12_, double set12_, double min22_, double max22_, double set22_, double min32_, double max32_, double set32_, double fitmin2_, double fitmax2_,
-                 double gxmin_, double gxmax_, double gymin_, double gymax_)
+                 double gxmin_, double gxmax_, double gymin_, double gymax_,
+                 TH1* TDC_ = nullptr)
         {
             known = known_; plugin = plugin_; histName = histName_; histNameX = histNameX_; histNameY = histNameY_; runNum = runNum_; 
             nEvents = nEvents_; verb = verb_; scan = scan_; 
-            min1 = min1_;   max1 = max1_;   set1 = set1_;   min2 = min2_;   max2 = max2_;   set2 = set2_;   min3 = min3_;   max3 = max3_;   set3 = set3_;   min4 = min4_; max4 = max4_; set4 = set4_; fitmin = fitmin_; fitmax = fitmax_; 
+            first = first_;
+            min1 = min1_;   max1 = max1_;   set1 = set1_;   min2 = min2_;   max2 = max2_;   set2 = set2_;   min3 = min3_;   max3 = max3_;   set3 = set3_;   min4 = min4_; max4 = max4_; set4 = set4_;
+            min5 = min5_;   max5 = max5_;   set5 = set5_;   min6 = min6_;   max6 = max6_;   set6 = set6_;   /*min7 = min7_;   max7 = max7_;   set7 = set7_;   min8 = min8_; max8 = max8_; set8 = set8_;*/
+            fitmin = fitmin_; fitmax = fitmax_; 
             second = second_;
             min12 = min12_; max12 = max12_; set12 = set12_; min22 = min22_; max22 = max22_; set22 = set22_; min32 = min32_; max32 = max32_; set32 = set32_; fitmin2 = fitmin2_; fitmax2 = fitmax2_; 
-            gxmin = gxmin_; gxmax = gxmax_; gymin = gymin_; gymax = gymax_; 
+            gxmin = gxmin_; gxmax = gxmax_; gymin = gymin_; gymax = gymax_;
+            TDC = TDC_;
         }
 
         //template<typename t> void setVar(t var, const std::string& varName) {varName = }
         void setMeanTS(bool m) {doMeanTS = m;}
         
-        PluginSummary() : scan(nullptr), doMeanTS(false)
+        PluginSummary() : scan(nullptr), doMeanTS(false), TDC(nullptr)
         {
         }
         ~PluginSummary()
@@ -90,19 +103,21 @@ private:
 
     static double meanTS(double* x, double* p)
     {
-        //p[0]: First time slice
-        //p[1]: time const
-        //p[2]: First phase
-        //p[3]: Second phase
+        //p[0]: switch 1
+        //p[1]: switch 2
+        //p[2]: switch 3
+        //p[3]: switch 4
+        //p[4]: time const 1
+        //p[5]: time const 2
         double val = 0;
-        if(x[0] < p[2] + 1)
-            val = p[0]; 
-        else if(p[2] < x[0] && x[0] < p[3] - 1)
-            val = p[0]*exp((x[0]-p[2])/p[1]);
-        else if(p[3] - 1 < x[0] && x[0] < 70)
+        if(x[0] < p[0] )
+            val = 3; 
+        else if(p[0] < x[0] && x[0] < p[1])
+            val = exp((x[0]-p[0])/p[4]) + 2;
+        else if(p[1] < x[0] && x[0] < p[2])
             val = 2;
-        else if(70 < x[0] && x[0] < 80)
-            val = 2*exp((x[0]-70)/p[1]);
+        else if(p[2] < x[0] && x[0] < p[3])
+            val = exp((x[0]-p[2])/p[5]) + 1;
         else
             val = 1;
             
@@ -204,47 +219,52 @@ private:
         //////////////////////
         //Fitting info
         //////////////////////
-        TF1* fit1 = nullptr;
         std::vector<std::string> names = {"slope","y-intercept"};
-        if (p->plugin == "iQi_phaseScan")
+        TF1* fit1 = nullptr;
+        if(p->first)
         {
-            if(p->doMeanTS)
+            if (p->plugin == "phaseScan")
             {
-                fit1 = new TF1("exp", meanTS, p->fitmin, p->fitmax, 4);
-                fit1->SetParLimits(2, p->min3, p->max3); 
-                fit1->SetParameter(2, p->set3);
-                fit1->SetParLimits(3, p->min4, p->max4); 
-                fit1->SetParameter(3, p->set4);
-                names = {"TS3","time const","phase 1","phase 2"};
+                if(p->doMeanTS)
+                {
+                    fit1 = new TF1("exp", meanTS, p->fitmin, p->fitmax, 6);
+                    fit1->SetParLimits(2, p->min3, p->max3); 
+                    fit1->SetParameter(2, p->set3);
+                    fit1->SetParLimits(3, p->min4, p->max4); 
+                    fit1->SetParameter(3, p->set4);
+                    fit1->SetParLimits(4, p->min5, p->max5); 
+                    fit1->SetParameter(4, p->set5);
+                    fit1->SetParLimits(5, p->min6, p->max6); 
+                    fit1->SetParameter(5, p->set6);
+                    names = {"switch 1","switch 2","switch 3","switch 4","time const 1","time const 2"};
+                }
+                else
+                {
+                    fit1 = new TF1("exp", expFunDecay, p->fitmin, p->fitmax, 3);
+                    fit1->SetParLimits(2, p->min3, p->max3); 
+                    fit1->SetParameter(2, p->set3);
+                    names = {"norm","time const","phase"};                
+                }
             }
             else
-            {
-                fit1 = new TF1("exp", expFunDecay, p->fitmin, p->fitmax, 3);
-                fit1->SetParLimits(2, p->min3, p->max3); 
-                fit1->SetParameter(2, p->set3);
-                names = {"norm","time const","phase"};                
-            }
+                fit1 = new TF1("line", lineFun, p->fitmin, p->fitmax, 2);
+            fit1->SetParLimits(0, p->min1, p->max1); 
+            fit1->SetParLimits(1, p->min2, p->max2); 
+            fit1->SetParameter(0, p->set1);
+            fit1->SetParameter(1, p->set2);
+            fit1->SetLineWidth(2);
+            fit1->SetLineColor(kRed);
+            hfit->Fit(fit1, "RQM", "", p->fitmin, p->fitmax);
+            fit1->Draw("same");
+            leg->AddEntry(fit1,"Fit","l");
+            drawFitInfo(fit1, names, 0.1, 0.13);
+            if(p->verb) printFitInfo(fit1);
         }
-        else
-            fit1 = new TF1("line", lineFun, p->fitmin, p->fitmax, 2);
-        fit1->SetParLimits(0, p->min1, p->max1); 
-        fit1->SetParLimits(1, p->min2, p->max2); 
-        fit1->SetParameter(0, p->set1);
-        fit1->SetParameter(1, p->set2);
-        //fit1->FixParameter(0, p->set1);
-        //fit1->FixParameter(1, p->set2);
-        fit1->SetLineWidth(2);
-        fit1->SetLineColor(kRed);
-        hfit->Fit(fit1, "RQM", "", p->fitmin, p->fitmax);
-        fit1->Draw("same");
-        leg->AddEntry(fit1,"Fit","l");
-        drawFitInfo(fit1, names, 0.1, 0.13);
-        if(p->verb) printFitInfo(fit1);
-
+        
         TF1* fit2 = nullptr;
         if(p->second)
         {
-            if (p->plugin == "iQi_phaseScan")
+            if (p->plugin == "phaseScan")
             {
                 fit2 = new TF1("exp2", expFunRise, p->fitmin2, p->fitmax2, 3);
                 fit2->SetParLimits(2, p->min32, p->max32); 
@@ -365,15 +385,21 @@ private:
             double num = 0;
             double den = 0;
             int index = -1;
+            bool bad = false;
+            double factor = 1;
             for(auto* p : pVec)
             {
                 index++;
                 num += timeSlice[index]*p->mean[t];
                 den += p->mean[t];
             }
+            if((t == 25 || t == 26 || t == 27) && bad)
+            {
+                num = y[t-1];
+                den = 1;
+            }
             x.push_back(t); y.push_back(num/den);
-            xError.push_back(0.1); yError.push_back(0.1);
-            //std::cout<<num/den<<std::endl;
+            xError.push_back(0.05); yError.push_back(0.01);
         }
         G* gFit = makeTGraph<G>(p, x, xError, y, yError);
         fitHisto<G>(p, gFit);
@@ -388,15 +414,20 @@ public:
         TFile* f = TFile::Open( r.file.c_str() );
         std::vector<PluginSummary*> pVec;
         PluginSummary* phaseInfo = nullptr;
+        std::vector<TH1*> tdcVec;
         
-        if(r.plugin == "iQi_GselScan")
+        if(r.plugin == "gselScan")
         {
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.histName).c_str() );
             p->set({1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Measured Gain", "Reference Gain", r.runNum, 100, verb, s,
-                   0, 2, 1, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                   false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   true,
+                   0,2,1, -1,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   0, 1,
+                   false,
+                   0,0,0, 0,0,0, 0,0,0,
+                   0, 0,
                    0, 1, 0.00000001, 1.00001
                 );
             pVec.push_back(p);
@@ -408,82 +439,108 @@ public:
             p->set({90, 180, 360, 720, 1440, 2880, 5760, 8640},
                    //{90, 180, 360, 62, 15400, 2880, 5760, 8640}, //test
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", r.runNum, 100, verb, s,
-                   0, 2, 1, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                   false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   true,
+                   0,2,1, -1,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   0, 1,
+                   false,
+                   0,0,0, 0,0,0, 0,0,0,
+                   0, 0,
                    0, 1, 0.00000001, 1.00001
                 );
             pVec.push_back(p);
         }
-        else if(r.plugin == "pedScan")
+        else if(r.plugin == "pedestalScan")
         {
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.histName).c_str() );
             p->set({},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s,
-                   0, 20, 10, -100, 1, 0, 0, 0, 0, 0, 0, 0, 33, 65,
+                   true,
+                   0,20,10, -100,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   33, 65,
                    false,
-                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0,0,0, 0,0,0, 0,0,0,
+                   0, 0,
                    0, 66, 0, 100
                 );
             pVec.push_back(p);
         }
-        else if(r.plugin == "CapIDpedestalScan")
+        else if(r.plugin == "capID0pedestal" || r.plugin == "capID1pedestal" ||
+                r.plugin == "capID2pedestal" || r.plugin == "capID3pedestal")
+    
         {
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.histName).c_str() );
             p->set({},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s,
-                   0, 20, 1, -100, 10, 0, 0, 0, 0, 0, 0, 0, 9, 16,
                    true,
-                   -20, 0, -1, -10, 100, 0, 0, 0, 0, 1, 8,
+                   0,20,1, -100,10,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   9, 16,
+                   true,
+                   -20,0,-1, -10,100,0, 0,0,0,
+                   1, 8,
                    0, 17, 0, 50
                 );
             pVec.push_back(p);
         }
-        else if(r.plugin == "iQi_phaseScan")
+        else if(r.plugin == "phaseScan")
         {
             PluginSummary* p1 = new PluginSummary();
             PluginSummary* p2 = new PluginSummary();
             PluginSummary* p3 = new PluginSummary();
-            TH1* s1 = (TH1*)f->Get( ("TS_1_"+r.histVar+r.histName).c_str() );
-            TH1* s2 = (TH1*)f->Get( ("TS_2_"+r.histVar+r.histName).c_str() );
-            TH1* s3 = (TH1*)f->Get( ("TS_3_"+r.histVar+r.histName).c_str() );
+            TH1* s1 = (TH1*)f->Get( (r.plugin+"_TS_1"+r.histVar+r.histName).c_str() );
+            TH1* s2 = (TH1*)f->Get( (r.plugin+"_TS_2"+r.histVar+r.histName).c_str() );
+            TH1* s3 = (TH1*)f->Get( (r.plugin+"_TS_3"+r.histVar+r.histName).c_str() );
+            TH1* t1 = nullptr; //(TH1*)f->Get( (r.plugin+"TS_1_TDC_vs_EvtNum_"+r.histName).c_str() ); tdcVec.push_back(t1);
+            TH1* t2 = nullptr; //(TH1*)f->Get( (r.plugin+"TS_2_TDC_vs_EvtNum_"+r.histName).c_str() ); tdcVec.push_back(t2);
+            TH1* t3 = nullptr; //(TH1*)f->Get( (r.plugin+"TS_3_TDC_vs_EvtNum_"+r.histName).c_str() ); tdcVec.push_back(t3);
             p1->set({},
                     r.plugin, "TS_1_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
-                    0, 100, 0, -6, -4, -5, 0, 100, 50, 0, 0, 0, 0, 72,
+                    false,
+                    0,100,0, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                    0, 72,
                     true,
-                    6000, 7000, 6500, -6, -4, -5, 0, 100, 50, 72, 110,
-                    0, 114, 0, 12000
+                    6000,7000,6500, -6,-4,-5, 0,100,50,
+                    72, 110,
+                    0, 100, 0, 12000,
+                    t1
                 );
             p2->set({},
                     r.plugin, "TS_2_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s2,
-                    6000, 7000, 6500, -100, -4, -5, 0, 100, 50, 0, 0, 0, 55, 90,
                     true,
-                    6000, 7000, 6500, -6, -4, -5, 0, 100, 50, 22, 55,
-                    0, 114, 0, 12000
+                    6000,7000,6500, -100,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                    55, 90,
+                    true,
+                    6000,7000,6500, -6,-4,-5, 0,100,50,
+                    22, 55,
+                    0, 100, 0, 12000,
+                    t2
                 );
             p3->set({},
                     r.plugin, "TS_3_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s3,
-                    6000, 7000, 6500, -100, -3, -5, 0, 30, 25.5, 0, 0, 0, 0, 40,
+                    true,
+                    6000,7000,6500, -100,-3,-5, 0,30,25.5, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                    0, 40,
                     false,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 114, 0, 12000
+                    0,0,0, 0,0,0, 0,0,0,
+                    0, 0,
+                    0, 100, 0, 12000,
+                    t3
                 );
             pVec.push_back(p1);
             pVec.push_back(p2);
             pVec.push_back(p3);
 
-        //p[0]: First time slice
-        //p[1]: time const
-        //p[2]: First phase
-        //p[3]: Second phase            
             phaseInfo = new PluginSummary();
             phaseInfo->set({},
                            r.plugin, r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
-                           2, 4, 3, -30, -10, -15, 10, 25, 20, 25, 35, 30, 0, 114,
+                           true,
+                           21,23,22, 32,45,32, 65,75,70, 75,90,85, -30,-3,-25, -30,-3,-15,
+                           0, 114,
                            false,
-                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                           0, 114, 0, 5
+                           0,0,0, 0,0,0, 0,0,0,
+                           0, 0,
+                           0, 100, 0, 5.5
                 );
         }
         f->Close();
@@ -491,42 +548,46 @@ public:
 
         for(auto* p : pVec)
         {
-            std::vector<double> mean, rms, sigma;
+            std::vector<double> mean, rms, sigma, tdc;
             for(int index = 0; index < p->scan->GetNbinsX()/p->nEvents; index++)
             {
-                double m = 0, m2 = 0; int n = 0;
+                double m = 0, m2 = 0; int n = 0, t = 0;
                 for(int bin = 1 + p->nEvents*index; bin <= (p->nEvents) + p->nEvents*index; bin++)
                 {
                     double c = p->scan->GetBinContent(bin);
                     m += c; m2 += c*c; n++;
+                    if(p->TDC  != nullptr) t += p->TDC->GetBinContent(bin);
                     //if(verb) std::cout<<index<<"  "<<bin<<"  "<<p->scan->GetBinContent(bin)<<std::endl;
                 }
-                //if(verb) std::cout<<n<<std::endl;
+                //if(verb) std::cout<<n<<std::endl
                 mean.push_back( m/n );
                 rms.push_back( sqrt(m2/n) );
+                tdc.push_back( t/n );
                 if( sqrt(m2/n) - m/n > 0)
                     sigma.push_back( sqrt( sqrt(m2/n) - m/n) );
                 else
                     sigma.push_back(0);
             }
-            p->setGraphInfo(mean, rms, sigma);
+            p->setGraphInfo(mean, rms, sigma, tdc);
         }
         
-        if(r.plugin == "iQi_GselScan" || r.plugin == "iQiScan")
+        if(r.plugin == "gselScan" || r.plugin == "iQiScan")
         {
             if(gType == "")
                 processRatios<TGraph>(pVec[0]);
             else if(gType == "Error")
                 processRatios<TGraphErrors>(pVec[0]);
         }
-        else if(r.plugin == "pedScan" || r.plugin == "CapIDpedestalScan")
+        else if(r.plugin == "pedestalScan"
+                || r.plugin == "capID0pedestal" || r.plugin == "capID1pedestal"
+                || r.plugin == "capID2pedestal" || r.plugin == "capID3pedestal")
         {
             if(gType == "")
                 processMeans<TGraph>(pVec[0]);
             else if(gType == "Error")
                 processMeans<TGraphErrors>(pVec[0]);
         }
-        else if(r.plugin == "iQi_phaseScan")
+        else if(r.plugin == "phaseScan")
         {
             if(gType == "")
             {
@@ -541,6 +602,7 @@ public:
         }
         
         for(auto* p : pVec){delete p;}
+        for(auto* p : tdcVec){delete p;}
     }
 };
 
