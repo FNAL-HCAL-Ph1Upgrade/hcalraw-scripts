@@ -172,23 +172,21 @@ private:
         }
     }
     
-    template<typename G> void fitHisto(const PluginSummary* p, G* hfit)
+    template<typename G> void fitHisto(const PluginSummary* p, G* graph)
     {
         TCanvas* c1 = new TCanvas("c1","c1",800,800);
         gPad->SetTopMargin(0.1);
         gPad->SetBottomMargin(0.12);
         gPad->SetRightMargin(0.05);
-        gPad->SetLeftMargin(0.14);
+        gPad->SetLeftMargin(0.15);
         TLegend* leg = new TLegend(0.3, 0.8, 0.7, 0.9);
         leg->SetTextSize(0.03);
         leg->SetBorderSize(0);
         leg->SetFillStyle(0);
-        leg->AddEntry(hfit,"Scan Setting","P");
+        leg->AddEntry(graph,"Scan Setting","P");
         //c1.SetLogx();
         //c1.SetLogy();
         TH1* temp = new TH1F("dummy","dummy",10,p->gxmin,p->gxmax);
-        //temp->GetXaxis()->SetRangeUser(0, 1);
-        //temp->GetXaxis()->SetRangeUser(0, 1);
         temp->SetMinimum(p->gymin);
         temp->SetMaximum(p->gymax);
         temp->SetStats(false);
@@ -197,16 +195,15 @@ private:
         temp->GetYaxis()->SetTitle(p->histNameY.c_str());
         temp->GetXaxis()->SetTitle(p->histNameX.c_str());
         temp->SetTitleOffset(1,"X");
-        temp->SetTitleOffset(1.2,"Y");
+        temp->SetTitleOffset(1.6,"Y");
         temp->SetTitleSize(0.04,"X");
         temp->SetTitleSize(0.04,"Y");
         temp->Draw();
         c1->Modified();
-        hfit->SetLineWidth(3);
-        hfit->SetMarkerStyle(21);
-        //hfit->SetLineColor(2);
-        hfit->Draw("same PE");
-        //hfit->Draw("same AP");
+        graph->SetLineWidth(3);
+        graph->SetMarkerStyle(kFullCircle);
+        //graph->SetMarkerStyle(kFullSquare);
+        graph->Draw("same PE");
         leg->Draw();
 
         TLatex mark;
@@ -214,7 +211,7 @@ private:
         mark.SetTextAlign(11);
         mark.SetTextSize(0.031);
         mark.SetTextFont(1);
-        mark.DrawLatex( 0.09, 0.95, p->histName.c_str());
+        mark.DrawLatex( 0.25, 0.95, p->histName.c_str());
     
         //////////////////////
         //Fitting info
@@ -254,7 +251,7 @@ private:
             fit1->SetParameter(1, p->set2);
             fit1->SetLineWidth(2);
             fit1->SetLineColor(kRed);
-            hfit->Fit(fit1, "RQM", "", p->fitmin, p->fitmax);
+            graph->Fit(fit1, "RQM", "", p->fitmin, p->fitmax);
             fit1->Draw("same");
             leg->AddEntry(fit1,"Fit","l");
             drawFitInfo(fit1, names, 0.1, 0.13);
@@ -279,7 +276,7 @@ private:
             fit2->SetParameter(1, p->set22);
             fit2->SetLineWidth(2);
             fit2->SetLineColor(kBlue);
-            hfit->Fit(fit2, "RQM", "", p->fitmin2, p->fitmax2);
+            graph->Fit(fit2, "RQM", "", p->fitmin2, p->fitmax2);
             fit2->Draw("same");
             leg->AddEntry(fit2,"Fit","l");
             drawFitInfo(fit2, names, 0.1, 0.25);
@@ -392,6 +389,7 @@ private:
                 index++;
                 num += timeSlice[index]*p->mean[t];
                 den += p->mean[t];
+                //std::cout<<p->tdc[t]<<std::endl;
             }
             if((t == 25 || t == 26 || t == 27) && bad)
             {
@@ -424,11 +422,11 @@ public:
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Measured Gain", "Reference Gain", r.runNum, 100, verb, s,
                    true,
                    0,2,1, -1,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
-                   0, 1,
+                   0, 1.1,
                    false,
                    0,0,0, 0,0,0, 0,0,0,
                    0, 0,
-                   0, 1, 0.00000001, 1.00001
+                   0, 1.01, 0.00000001, 1.01
                 );
             pVec.push_back(p);
         }
@@ -441,11 +439,11 @@ public:
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", r.runNum, 100, verb, s,
                    true,
                    0,2,1, -1,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
-                   0, 1,
+                   0, 1.1,
                    false,
                    0,0,0, 0,0,0, 0,0,0,
                    0, 0,
-                   0, 1, 0.00000001, 1.00001
+                   0, 1.01, 0.00000001, 1.01
                 );
             pVec.push_back(p);
         }
@@ -491,11 +489,11 @@ public:
             TH1* s1 = (TH1*)f->Get( (r.plugin+"_TS_1"+r.histVar+r.histName).c_str() );
             TH1* s2 = (TH1*)f->Get( (r.plugin+"_TS_2"+r.histVar+r.histName).c_str() );
             TH1* s3 = (TH1*)f->Get( (r.plugin+"_TS_3"+r.histVar+r.histName).c_str() );
-            TH1* t1 = nullptr; //(TH1*)f->Get( (r.plugin+"TS_1_TDC_vs_EvtNum_"+r.histName).c_str() ); tdcVec.push_back(t1);
-            TH1* t2 = nullptr; //(TH1*)f->Get( (r.plugin+"TS_2_TDC_vs_EvtNum_"+r.histName).c_str() ); tdcVec.push_back(t2);
-            TH1* t3 = nullptr; //(TH1*)f->Get( (r.plugin+"TS_3_TDC_vs_EvtNum_"+r.histName).c_str() ); tdcVec.push_back(t3);
+            TH1* t1 = (TH1*)f->Get( (r.plugin+"_TS_1_TDC_vs_EvtNum_"+r.histName).c_str() ); tdcVec.push_back(t1);
+            TH1* t2 = (TH1*)f->Get( (r.plugin+"_TS_2_TDC_vs_EvtNum_"+r.histName).c_str() ); tdcVec.push_back(t2);
+            TH1* t3 = (TH1*)f->Get( (r.plugin+"_TS_3_TDC_vs_EvtNum_"+r.histName).c_str() ); tdcVec.push_back(t3);
             p1->set({},
-                    r.plugin, "TS_1_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
+                    r.plugin, "Run"+r.runNum+"_TS_1_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
                     false,
                     0,100,0, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 72,
@@ -506,7 +504,7 @@ public:
                     t1
                 );
             p2->set({},
-                    r.plugin, "TS_2_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s2,
+                    r.plugin, "Run"+r.runNum+"_TS_2_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s2,
                     true,
                     6000,7000,6500, -100,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     55, 90,
@@ -517,7 +515,7 @@ public:
                     t2
                 );
             p3->set({},
-                    r.plugin, "TS_3_Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s3,
+                    r.plugin, "Run"+r.runNum+"_TS_3_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s3,
                     true,
                     6000,7000,6500, -100,-3,-5, 0,30,25.5, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 40,
@@ -533,7 +531,7 @@ public:
 
             phaseInfo = new PluginSummary();
             phaseInfo->set({},
-                           r.plugin, r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge [fC]", r.runNum, 100, verb, s1,
+                           r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.histName, "Setting", "Charge Weighted TS", r.runNum, 100, verb, s1,
                            true,
                            21,23,22, 32,45,32, 65,75,70, 75,90,85, -30,-3,-25, -30,-3,-15,
                            0, 114,
