@@ -26,9 +26,34 @@ public:
     const std::string& runNum;
 };
 
+class FitResults
+{
+public:
+    TF1* fit1;
+    TF1* fit2;
+    
+    template<typename T> void setVar(const std::string& name, T var)
+    {
+        if(name == "fit1") fit1 = var;
+        else if(name == "fit2") fit2 = var;
+    }
+    
+    FitResults() : fit1(nullptr), fit2(nullptr)
+    {
+    }
+
+    ~FitResults()
+    {
+        delete fit1;
+        delete fit2;
+    }
+};
+
 class ProcessPlugins
 {
 private:
+    FitResults* fitResults;
+    
     class PluginSummary
     {
     public:
@@ -296,15 +321,17 @@ private:
             drawFitInfo(fit2, names, 0.1, 0.25);
             if(p->verb) printFitInfo(fit2);
         }
-    
+        
         gSystem->Exec( ("mkdir -p run"+p->runNum+"/").c_str() ) ;
         c1->Print(("run"+p->runNum+"/"+p->histName+".png").c_str());
-        
+
+        fitResults = new FitResults();
+        fitResults->setVar<TF1*>("fit1", fit1);
+        fitResults->setVar<TF1*>("fit2", fit2);
+
         delete c1;
         delete leg;
         delete temp;
-        delete fit1;
-        delete fit2;
     }
 
     template<typename G> G* makeTGraph(const PluginSummary* p,
@@ -420,6 +447,11 @@ private:
     }
         
 public:
+    FitResults* getFitResults()
+    {
+        return fitResults;
+    }
+
     void processPlugins(const RunSummary& r, const std::string& gType = "", const bool verb = true)
     {
         TH1::AddDirectory(false);
@@ -615,6 +647,10 @@ public:
         
         for(auto* p : pVec){delete p;}
         for(auto* p : tdcVec){delete p;}
+    }
+
+    ProcessPlugins() : fitResults(nullptr)
+    {
     }
 };
 

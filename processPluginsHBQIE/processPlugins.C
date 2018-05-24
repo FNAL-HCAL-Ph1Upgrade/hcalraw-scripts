@@ -42,24 +42,48 @@ int main(int argc, char *argv[])
     //const int chNum = 8;
     const std::vector<const std::string>& SLOT2_FIBERS = {"2"};
     const int chNum = 1;
-
     const std::vector<const std::string>& plugins = {"gselScan","iQiScan","pedestalScan","phaseScan","capID0pedestal", "capID1pedestal", "capID2pedestal", "capID3pedestal"};
 
-    for(const auto& plugin : plugins)
-    {
-        std::string firstPart = plugin + "_Charge_vs_EvtNum_";
-        if(plugin == "phaseScan") firstPart = "_Charge_vs_EvtNum_";
 
-        for(const auto& fib : SLOT2_FIBERS)
+    std::map<std::string, std::vector<FitResults*>> resultsMap;
+    for(const auto& fib : SLOT2_FIBERS)
+    {
+        for(int ch = 0; ch < chNum; ch++)
         {
-            for(int ch = 0; ch < chNum; ch++)
+            std::string channel = "Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch);
+            std::vector<FitResults*> results;
+            for(const auto& plugin : plugins)
             {
+                std::string firstPart = plugin + "_Charge_vs_EvtNum_";
+                if(plugin == "phaseScan") firstPart = "_Charge_vs_EvtNum_";
+
                 //std::cout << firstPart + "Slot_2_Fib_" + fib + "_Ch_" + std::to_string(ch) << std::endl;
-                RunSummary r = {plugin, runFile, firstPart, "Slot_2_Fib_"+fib+"_Ch_"+std::to_string(ch), runNum};
+                RunSummary rs = {plugin, runFile, firstPart, channel, runNum};
                 ProcessPlugins p;
                 //p.processPlugins(r, "", false);
-                p.processPlugins(r, "Error", false);
+                p.processPlugins(rs, "Error", false);
+                FitResults* r = p.getFitResults();
+                results.push_back(r);                
             }
+            resultsMap.insert( std::pair<std::string, std::vector<FitResults*>>(channel, results) );
+        }
+    }
+    
+    for(const auto& ch : resultsMap)
+    {
+        int index = -1;
+        for(const auto* r : ch.second)
+        {
+            index++;
+            if(r->fit2 != nullptr)
+            {
+                std::cout<<ch.first<<" "<<plugins[index]<<" "<<r->fit1->GetChisquare()<<" "<<r->fit2->GetChisquare()<<std::endl;
+            }
+            else
+            {
+                std::cout<<ch.first<<" "<<plugins[index]<<" "<<r->fit1->GetChisquare()<<std::endl;
+            }
+            delete r;
         }
     }
 }
