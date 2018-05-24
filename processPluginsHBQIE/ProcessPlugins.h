@@ -121,8 +121,7 @@ private:
 
     static double lineFun(double* x, double* p)
     {
-        //p[0]: Slope of the line
-        //p[1]: y-intercept of the line
+        //p[0]: Slope of the line, p[1]: y-intercept of the line
         return p[0]*x[0] + p[1];
     }
 
@@ -133,12 +132,7 @@ private:
     
     static double meanTS(double* x, double* p)
     {
-        //p[0]: switch 1
-        //p[1]: switch 2
-        //p[2]: switch 3
-        //p[3]: switch 4
-        //p[4]: time const 1
-        //p[5]: time const 2
+        //p[0]: switch 1, p[1]: switch 2, p[2]: switch 3, p[3]: switch 4, p[4]: time const 1, p[5]: time const 2
         double val = 0;
         if(x[0] < p[0] )
             val = 3; 
@@ -165,17 +159,13 @@ private:
         
     static double expFunDecay(double* x, double* p)
     {
-        //p[0]: norm
-        //p[1]: time const
-        //p[2]: phase        
+        //p[0]: norm, p[1]: time const, p[2]: phase        
         return (x[0] < p[2] + 1) ? p[0]: p[0]*exp((x[0]-p[2])/p[1]);
     }
 
     static double expFunRise(double* x, double* p)
     {
-        //p[0]: norm
-        //p[1]: time const
-        //p[2]: phase        
+        //p[0]: norm, p[1]: time const, p[2]: phase        
         return (x[0] < p[2] + 1) ? p[0] : p[0]*(1 - exp((x[0]-p[2])/p[1]) );
     }
 
@@ -205,8 +195,8 @@ private:
         for(const auto& name : names)
         {
             index++;
-            char ch[100];
-            sprintf(ch, "%s %18s %.3f #pm %.3f"    ,name.c_str(), "", fit->GetParameter(index), fit->GetParError(index));
+            char ch[50];
+            sprintf(ch, "%-18s %.3f #pm %.3f"    ,name.c_str(), fit->GetParameter(index), fit->GetParError(index));
             mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.03*(index+1) ), ch);
         }
     }
