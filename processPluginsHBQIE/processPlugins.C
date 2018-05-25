@@ -11,9 +11,28 @@ class PluginPassInfo
 {
 public:
     std::string plugin;
-    double min;
-    double max;    
+    double chi2Min1, chi2Max1;
+    std::vector<double> min1, max1;
+    //
+    //double chi2Min2, chi2Max2;
+    //std::vector<double> min2, max2;
 };
+
+void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<bool>& flags)
+{
+    double chi2Fit1 = r->fit1->GetChisquare();
+    //double chi2Fit2 = r->fit2->GetChisquare();
+    
+    bool flag = (p.chi2Min1 < chi2Fit1 && chi2Fit1 < p.chi2Max1) ? true : false; 
+    flags.push_back(flag);
+    
+    for(int pram = 0; pram < p.min1.size(); pram++ )
+    {
+        double val = r->fit1->GetParameter(pram);
+        flag = (p.min1[pram] < val && val < p.max1[pram]) ? true : false; 
+        flags.push_back(flag);
+    }
+}
 
 std::string split(std::string half, std::string s, std::string h)
 {
@@ -48,22 +67,27 @@ int main(int argc, char *argv[])
     // -------------------------------------------------
     // Define everything needed to process the plugins
     // -------------------------------------------------
-
+    
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
     //const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 7} };
     //const int chNum = 7;
     const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
     const int chNum = 0;
-    const std::vector<PluginPassInfo>& plugins = {{"gselScan",       0.0,   3.0},
-                                                  {"iQiScan",        0.0,   3.5},
-                                                  {"pedestalScan",   0.0, 360.0},
-                                                  {"phaseScan",      0.0,  70.0},
-                                                  {"capID0pedestal", 0.0,  25.0},
-                                                  {"capID1pedestal", 0.0,  15.0},
-                                                  {"capID2pedestal", 0.0,  23.0},
-                                                  {"capID3pedestal", 0.0,  21.0},
+    const std::vector<PluginPassInfo>& plugins = {
+        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}},
+        {"iQiScan",        0.0,   3.5, {0.95,  -0.01}, {1.05,   0.01}},
+        {"pedestalScan",   0.0, 360.0, {2.40, -81.00}, {2.50, -80.00}},
+        {"phaseScan",      0.0,  70.0, {20.0, 40.0, 70.0, 89.0, -4.3, -4.3}, {21.0, 42.0, 71.0, 91.0 , -4.0, -4.0}},
+        {"capID0pedestal", 0.0,  25.0, {1.4,  4.5}, {1.6,  5.0}
+        },
+        {"capID1pedestal", 0.0,  15.0, {1.4, -2.0}, {1.6, -1.0}
+        },
+        {"capID2pedestal", 0.0,  23.0, {1.4,  1.0}, {1.6,  3.0}
+        },
+        {"capID3pedestal", 0.0,  21.0, {1.4, -0.1}, {1.6,  0.1}
+        },
     };
-
+    
     // ---------------------------------------------------
     // Loop over all of the channels and make the fit map
     // ---------------------------------------------------
@@ -81,7 +105,7 @@ int main(int argc, char *argv[])
                 {
                     std::string firstPart = info.plugin + "_Charge_vs_EvtNum_";
                     if(info.plugin == "phaseScan") firstPart = "_Charge_vs_EvtNum_";
-
+    
                     //std::cout << firstPart + channel << std::endl;
                     RunSummary rs = {info.plugin, runFile, firstPart, channel, runNum};
                     ProcessPlugins p;
@@ -94,30 +118,35 @@ int main(int argc, char *argv[])
             }
         }
     }
-
+    
     // ---------------------------------------------------
     // Check each fit and decide if it passed or failed
     // ---------------------------------------------------
-
+    
     for(const auto& ch : resultsMap)
     {
         int index = -1;
         for(const auto* r : ch.second)
         {
             index++;
-            double chi2 = r->fit1->GetChisquare();
-            if(r->fit2 != nullptr)
+            std::vector<bool> flags;
+            checkFit(r, plugins[index], flags);
+            for(const auto& f : flags)
             {
-                std::cout<<ch.first<<" "<<plugins[index].plugin<<" "<<chi2<<" "<<r->fit2->GetChisquare()<<std::endl;
-                if(plugins[index].min < chi2 && chi2 < plugins[index].max) std::cout<<"pass"<<std::endl;                    
-                else std::cout<<"fail"<<std::endl;
+                std::cout<<plugins[index].plugin<<" "<<f<<std::endl;
             }
-            else
-            {
-                std::cout<<ch.first<<" "<<plugins[index].plugin<<" "<<r->fit1->GetChisquare()<<std::endl;
-                if(plugins[index].min < chi2 && chi2 < plugins[index].max) std::cout<<"pass"<<std::endl;                    
-                else std::cout<<"fail"<<std::endl;
-            }            
+            //if(r->fit2 != nullptr)
+            //{
+            //    std::cout<<ch.first<<" "<<plugins[index].plugin<<" "<<chi2<<" "<<r->fit2->GetChisquare()<<std::endl;
+            //    if(plugins[index].min < chi2 && chi2 < plugins[index].max) std::cout<<"pass"<<std::endl;                    
+            //    else std::cout<<"fail"<<std::endl;
+            //}
+            //else
+            //{
+            //    std::cout<<ch.first<<" "<<plugins[index].plugin<<" "<<r->fit1->GetChisquare()<<std::endl;
+            //    if(plugins[index].min < chi2 && chi2 < plugins[index].max) std::cout<<"pass"<<std::endl;                    
+            //    else std::cout<<"fail"<<std::endl;
+            //}
             delete r;
         }
     }
