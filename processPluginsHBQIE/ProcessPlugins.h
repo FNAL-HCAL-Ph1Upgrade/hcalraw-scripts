@@ -11,6 +11,7 @@
 #include "TGraphErrors.h"
 #include "TSystem.h"
 #include "TAxis.h"
+#include "TROOT.h"
 
 #include <string>
 #include <vector>
