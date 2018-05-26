@@ -7,17 +7,18 @@
 #include <iostream>
 #include <string>
 
-class SummaryPlotInfo
-{
-public:
-    std::string name;
-    int num;
-    double min, max;
-};
 
 class PluginPassInfo
 {
 public:
+    class SummaryPlotInfo
+    {
+    public:
+        std::string name;
+        int num;
+        double min, max;
+    };
+
     std::string plugin;
     double chi2Min1, chi2Max1;
     std::vector<double> min1, max1;
@@ -42,22 +43,6 @@ public:
           min1(min1_), max1(max1_),
           chi2Min2(chi2Min2_), chi2Max2(chi2Max2_),
           min2(min2_), max2(max2_), parNames(parNames_) {}
-    //PluginPassInfo(std::string plugin_,
-    //               double chi2Min1_, double chi2Max1_,
-    //               std::vector<double> min1_, std::vector<double> max1_, std::vector<std::string> parNames_)
-    //    : plugin(plugin_), chi2Min1(chi2Min1_), chi2Max1(chi2Max1_),
-    //      min1(min1_), max1(max1_), parNames(parNames_), 
-    //      chi2Min2(-1), chi2Max2(-1), min2({}), max2({}) {}
-    //
-    //PluginPassInfo(std::string plugin_,
-    //               double chi2Min1_, double chi2Max1_,
-    //               std::vector<double> min1_, std::vector<double> max1_,
-    //               double chi2Min2_, double chi2Max2_,
-    //               std::vector<double> min2_, std::vector<double> max2_, std::vector<std::string> parNames_)
-    //    : plugin(plugin_), chi2Min1(chi2Min1_), chi2Max1(chi2Max1_),
-    //      min1(min1_), max1(max1_),
-    //      chi2Min2(chi2Min2_), chi2Max2(chi2Max2_),
-    //      min2(min2_), max2(max2_), parNames(parNames_) {}
 };
 
 void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<bool>& flags, std::vector<TH1F*>& summaryVec)
@@ -73,7 +58,6 @@ void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<bool>& f
         (*summaryVec[1+pram]).Fill(val);
         bool flag = (p.min1[pram] < val && val < p.max1[pram]) ? true : false; 
         flags.push_back(flag);
-        std::cout<<1+pram<<" "<<p.min1.size()<<std::endl;
     }
     
     if(r->fit2 != nullptr)
@@ -132,12 +116,8 @@ int main(int argc, char *argv[])
     //const int chNum = 7;
     const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
     const int chNum = 0;
-    //std::string name;
-    //int num;
-    //double min, max;
-
     const std::vector<PluginPassInfo>& plugins = {
-        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",20,-1000,10000}, {"slope",20,-1000,10000}, {"y-intercept",20,-1000,10000}}},
+        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",20,0,10}, {"slope",20,0,2}, {"y-intercept",20,-10,5}}},
         //{"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1"}, {"slope"},{"y-intercept"}}},
         //{"pedestalScan",   0.0, 360.0, {2.30, -81.00}, {2.50, -75.00}, {{"chi2Fit1"}, {"slope"},{"y-intercept"}}},
         //{"phaseScan",      0.0,  75.0, {20.0, 40.0, 70.0, 89.0, -4.3, -4.3}, {21.0, 45.0, 71.0, 91.0 , -3.8, -3.8}, {{"chi2Fit1"},{"switch1"},{"switch2"},{"switch3"},{"switch4"},{"timeConst1"},{"timeConst2"}}},
@@ -150,25 +130,15 @@ int main(int argc, char *argv[])
         //{"capID3pedestal", 0.0,  34.0, { 1.4,  1.0}, { 1.6,  2.0},
         // 0.0,  25.0, {-1.5, 15.0}, {-1.3, 17.0}, {{"chi2Fit1"}, {"slope1"}, {"y-intercept1"}, {"chi2Fit2"}, {"slope2"}, {"y-intercept2"}}},
     };
-    //std::string plugin;
-    //double chi2Min1, chi2Max1;
-    //std::vector<double> min1, max1;
-    //std::vector<std::string> parNames;
-    //
-    //double chi2Min2, chi2Max2;
-    //std::vector<double> min2, max2;
-    //std::vector<std::vector<std::string>> summaryPlots;
+
     std::vector<std::vector<TH1F*>> summaryPlots;
     for(const auto& p : plugins)
     {
-        //std::vector<std::string> summaryVec;
         std::vector<TH1F*> summaryVec;
         for(const auto& s : p.parNames)
         {
             std::string name = p.plugin+" "+s.name;
-            //summaryVec.push_back(name);
-            //std::cout<<name<<std::endl;
-            TH1F* summary = new TH1F(name.c_str(),name.c_str(),20,-1000,10000);
+            TH1F* summary = new TH1F(name.c_str(),name.c_str(),s.num,s.min,s.max);
             summaryVec.push_back(summary);
         }
         summaryPlots.push_back(summaryVec);
@@ -178,7 +148,7 @@ int main(int argc, char *argv[])
     // Loop over all of the channels and make the fit map
     // ---------------------------------------------------
 
-    //gErrorIgnoreLevel = kWarning;
+    gErrorIgnoreLevel = kWarning;
     std::map<std::string, std::vector<FitResults*>> resultsMap;
     for(const auto& sf : SLOTS_FIBERS)
     {
@@ -187,6 +157,7 @@ int main(int argc, char *argv[])
             for(int ch = 0; ch <= chNum; ch++)
             {
                 std::string channel = "Slot_"+sf.first+"_Fib_"+std::to_string(fib)+"_Ch_"+std::to_string(ch);
+                std::cout<<channel<<std::endl;
                 std::vector<FitResults*> results;
                 for(const auto& info : plugins)
                 {
@@ -212,7 +183,7 @@ int main(int argc, char *argv[])
 
     gErrorIgnoreLevel = kPrint;
     TCanvas* c = new TCanvas("c","c",800,800);
-    TH1F* slopeH = new TH1F("gsel slope","gsel slope",20, 0.5, 1.5);
+    //TH1F* slopeH = new TH1F("gsel slope","gsel slope",20, 0.5, 1.5);
     for(const auto& ch : resultsMap)
     {
         std::cout<<"-------------"<<ch.first<<"-------------"<<std::endl;
@@ -229,11 +200,11 @@ int main(int argc, char *argv[])
                 std::cout<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f<<std::endl;
             }
 
-            if(plugins[index].plugin == "gselScan")
-            {
-                double slope = r->fit1->GetParameter(0);
-                slopeH->Fill(slope);
-            }
+            //if(plugins[index].plugin == "gselScan")
+            //{
+            //    double slope = r->fit1->GetParameter(0);
+            //    slopeH->Fill(slope);
+            //}
             
             delete r;
         }
@@ -244,14 +215,17 @@ int main(int argc, char *argv[])
         for(auto* s : v)
         {
             std::string name = s->GetName();
+            s->SetLineColor(kBlack);
             s->Draw();
-            c->Print((name+".png").c_str());
+            const std::string& first  = split("first", name, " ");
+            const std::string& last  = split("last", name, " ");
+            c->Print(("Summary"+first+"_"+last+".png").c_str());
             delete s;
         }
     }
     
-    slopeH->Draw();
-    c->Print("chi2Dist_gselScan.png");
-    delete slopeH;
+    //slopeH->Draw();
+    //c->Print("chi2Dist_gselScan.png");
+    //delete slopeH;
     delete c;
 }
