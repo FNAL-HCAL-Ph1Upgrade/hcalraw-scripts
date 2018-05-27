@@ -7,52 +7,6 @@
 #include <iostream>
 #include <string>
 
-
-class PluginPassInfo
-{
-public:
-    class SummaryPlotInfo
-    {
-    public:
-        std::string name;
-        int num;
-        double min, max;
-    };
-
-    std::string plugin;
-    double chi2Min1, chi2Max1;
-    std::vector<double> min1, max1;
-    std::vector<SummaryPlotInfo> parNames;
-    
-    double chi2Min2, chi2Max2;
-    std::vector<double> min2, max2;
-    
-    PluginPassInfo(std::string plugin_,
-                   double chi2Min1_, double chi2Max1_,
-                   std::vector<double> min1_, std::vector<double> max1_, std::vector<SummaryPlotInfo> parNames_)
-        : plugin(plugin_), chi2Min1(chi2Min1_), chi2Max1(chi2Max1_),
-          min1(min1_), max1(max1_), parNames(parNames_), 
-          chi2Min2(-1), chi2Max2(-1), min2({}), max2({}) {}
-
-    PluginPassInfo(std::string plugin_,
-                   double chi2Min1_, double chi2Max1_,
-                   double chi2Min2_, double chi2Max2_,
-                   std::vector<SummaryPlotInfo> parNames_)
-        : plugin(plugin_), chi2Min1(chi2Min1_), chi2Max1(chi2Max1_),
-          min1({}), max1({}), parNames(parNames_), 
-          chi2Min2(chi2Min2_), chi2Max2(chi2Max2_), min2({}), max2({}) {}
-
-    PluginPassInfo(std::string plugin_,
-                   double chi2Min1_, double chi2Max1_,
-                   std::vector<double> min1_, std::vector<double> max1_,
-                   double chi2Min2_, double chi2Max2_,
-                   std::vector<double> min2_, std::vector<double> max2_, std::vector<SummaryPlotInfo> parNames_)
-        : plugin(plugin_), chi2Min1(chi2Min1_), chi2Max1(chi2Max1_),
-          min1(min1_), max1(max1_),
-          chi2Min2(chi2Min2_), chi2Max2(chi2Max2_),
-          min2(min2_), max2(max2_), parNames(parNames_) {}
-};
-
 void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<bool>& flags, std::vector<TH1F*>& summaryVec)
 {
     if(p.plugin == "pedestal")
@@ -133,10 +87,10 @@ int main(int argc, char *argv[])
     // -------------------------------------------------
     
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
-    const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 7} };
-    const int chNum = 7;
-    //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 7} };
+    //const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 7} };
     //const int chNum = 7;
+    const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
+    const int chNum = 0;
     const std::vector<PluginPassInfo>& plugins = {
         {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
         {"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
