@@ -47,17 +47,30 @@ public:
 
 void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<bool>& flags, std::vector<TH1F*>& summaryVec)
 {
-    double chi2Fit1 = r->fit1->GetChisquare();
-    (*summaryVec[0]).Fill(chi2Fit1);
-    bool flag = (p.chi2Min1 < chi2Fit1 && chi2Fit1 < p.chi2Max1) ? true : false; 
-    flags.push_back(flag);
-    
-    for(int pram = 0; pram < p.min1.size(); pram++ )
+    if(p.plugin == "pedestal")
     {
-        double val = r->fit1->GetParameter(pram);
-        (*summaryVec[1+pram]).Fill(val);
-        bool flag = (p.min1[pram] < val && val < p.max1[pram]) ? true : false; 
+        (*summaryVec[0]).Fill(r->mean);
+        (*summaryVec[1]).Fill(r->sigma);
+        bool flag = (p.chi2Min1 < r->mean && r->mean < p.chi2Max1) ? true : false;
         flags.push_back(flag);
+        flag = (p.chi2Min2 < r->sigma && r->sigma < p.chi2Max2) ? true : false;
+        flags.push_back(flag);        
+    }
+    
+    if(r->fit1 != nullptr)
+    {
+        double chi2Fit1 = r->fit1->GetChisquare();
+        (*summaryVec[0]).Fill(chi2Fit1);
+        bool flag = (p.chi2Min1 < chi2Fit1 && chi2Fit1 < p.chi2Max1) ? true : false; 
+        flags.push_back(flag);
+    
+        for(int pram = 0; pram < p.min1.size(); pram++ )
+        {
+            double val = r->fit1->GetParameter(pram);
+            (*summaryVec[1+pram]).Fill(val);
+            bool flag = (p.min1[pram] < val && val < p.max1[pram]) ? true : false; 
+            flags.push_back(flag);
+        }
     }
     
     if(r->fit2 != nullptr)
@@ -114,21 +127,28 @@ int main(int argc, char *argv[])
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
     //const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 7} };
     //const int chNum = 7;
-    const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
-    const int chNum = 0;
+    const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 7} };
+    const int chNum = 7;
     const std::vector<PluginPassInfo>& plugins = {
-        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",20,0,10}, {"slope",20,0,2}, {"y-intercept",20,-10,5}}},
-        //{"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1"}, {"slope"},{"y-intercept"}}},
-        //{"pedestalScan",   0.0, 360.0, {2.30, -81.00}, {2.50, -75.00}, {{"chi2Fit1"}, {"slope"},{"y-intercept"}}},
-        //{"phaseScan",      0.0,  75.0, {20.0, 40.0, 70.0, 89.0, -4.3, -4.3}, {21.0, 45.0, 71.0, 91.0 , -3.8, -3.8}, {{"chi2Fit1"},{"switch1"},{"switch2"},{"switch3"},{"switch4"},{"timeConst1"},{"timeConst2"}}},
-        //{"capID0pedestal", 0.0,  25.0, { 1.4,  4.5}, { 1.6,  5.5},
-        // 0.0,  18.0, {-1.5, 19.0}, {-1.4, 20.0}, {{"chi2Fit1"}, {"slope1"}, {"y-intercept1"}, {"chi2Fit2"}, {"slope2"}, {"y-intercept2"}}},
-        //{"capID1pedestal", 0.0,  30.0, { 1.4,  4.0}, { 1.6,  5.0},
-        // 0.0,  20.0, {-1.5, 19.0}, {-1.3, 20.0}, {{"chi2Fit1"}, {"slope1"}, {"y-intercept1"}, {"chi2Fit2"}, {"slope2"}, {"y-intercept2"}}},
-        //{"capID2pedestal", 0.0,  32.0, { 1.4,  1.0}, { 1.6,  3.0},
-        // 0.0,  14.0, {-1.6, 16.0}, {-1.3, 18.0}, {{"chi2Fit1"}, {"slope1"}, {"y-intercept1"}, {"chi2Fit2"}, {"slope2"}, {"y-intercept2"}}},
-        //{"capID3pedestal", 0.0,  34.0, { 1.4,  1.0}, { 1.6,  2.0},
-        // 0.0,  25.0, {-1.5, 15.0}, {-1.3, 17.0}, {{"chi2Fit1"}, {"slope1"}, {"y-intercept1"}, {"chi2Fit2"}, {"slope2"}, {"y-intercept2"}}},
+        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",20,0,10}, {"slope",20,0,2}, {"y-intercept",20,-2,2}}},
+        {"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",20,0,10}, {"slope",20,0,2}, {"y-intercept",20,-2,2}}},
+        {"pedestalScan",   0.0, 360.0, {2.30, -81.00}, {2.50, -75.00}, {{"chi2Fit1",20,0,500}, {"slope",20,2,3},{"y-intercept",20,-90,-70}}},
+        {"phaseScan",      0.0,  75.0, {20.0, 40.0, 70.0, 89.0, -4.3, -4.3}, {21.0, 45.0, 71.0, 91.0 , -3.8, -3.8}, {{"chi2Fit1",20,0,80},{"switch1",20,15,30},
+                                                                                                                     {"switch2",20,35,55}, {"switch3",20,65,75},
+                                                                                                                     {"switch4",20,80,100}, {"timeConst1",20,-5,-2},{"timeConst2",20,-5,-2}}},
+        {"capID0pedestal", 0.0,  25.0, { 1.4,  4.5}, { 1.6,  5.5},
+         0.0,  18.0, {-1.5, 19.0}, {-1.4, 20.0}, {{"chi2Fit1",20,0,40}, {"slope1",20,1,2}, {"y-intercept1",20,4,6},
+                                                  {"chi2Fit2",20,0,30}, {"slope2",20,-3,0}, {"y-intercept2",20,15,30}}},
+        {"capID1pedestal", 0.0,  30.0, { 1.4,  4.0}, { 1.6,  5.0},
+         0.0,  20.0, {-1.5, 19.0}, {-1.3, 20.0}, {{"chi2Fit1",20,0,40}, {"slope1",20,0,3}, {"y-intercept1",20,3,6},
+                                                  {"chi2Fit2",20,0,30}, {"slope2",20,-3,0}, {"y-intercept2",20,15,30}}},
+        {"capID2pedestal", 0.0,  32.0, { 1.4,  1.0}, { 1.6,  3.0},
+         0.0,  14.0, {-1.6, 16.0}, {-1.3, 18.0}, {{"chi2Fit1",20,0,40}, {"slope1",20,0,3}, {"y-intercept1",20,0,10},
+                                                  {"chi2Fit2",20,0,30}, {"slope2",20,-3,0}, {"y-intercept2",20,10,30}}},
+        {"capID3pedestal", 0.0,  34.0, { 1.4,  1.0}, { 1.6,  2.0},
+         0.0,  25.0, {-1.5, 15.0}, {-1.3, 17.0}, {{"chi2Fit1",20,0,40}, {"slope1",20,0,3}, {"y-intercept1",20,0,3},
+                                                  {"chi2Fit2",20,0,30}, {"slope2",20,-4,0}, {"y-intercept2",20,10,30}}},
+        {"pedestal",   0, 30, {}, {}, 0, 30, {}, {}, {{"mean",20,0,30},{"sigma",20,-2,2}}},
     };
 
     std::vector<std::vector<TH1F*>> summaryPlots;
@@ -139,6 +159,7 @@ int main(int argc, char *argv[])
         {
             std::string name = p.plugin+" "+s.name;
             TH1F* summary = new TH1F(name.c_str(),name.c_str(),s.num,s.min,s.max);
+            summary->GetYaxis()->SetTitle("Channels");;
             summaryVec.push_back(summary);
         }
         summaryPlots.push_back(summaryVec);
@@ -147,7 +168,9 @@ int main(int argc, char *argv[])
     // ---------------------------------------------------
     // Loop over all of the channels and make the fit map
     // ---------------------------------------------------
-
+    std::cout<<"//////////////////////////////////////////////////////"<<std::endl;
+    std::cout<<"//////////////Making Map of the Fit Results///////////"<<std::endl;
+    std::cout<<"//////////////////////////////////////////////////////"<<std::endl;
     gErrorIgnoreLevel = kWarning;
     std::map<std::string, std::vector<FitResults*>> resultsMap;
     for(const auto& sf : SLOTS_FIBERS)
@@ -157,7 +180,7 @@ int main(int argc, char *argv[])
             for(int ch = 0; ch <= chNum; ch++)
             {
                 std::string channel = "Slot_"+sf.first+"_Fib_"+std::to_string(fib)+"_Ch_"+std::to_string(ch);
-                std::cout<<channel<<std::endl;
+                std::cout<<"-------------"<<channel<<"-------------"<<std::endl;
                 std::vector<FitResults*> results;
                 for(const auto& info : plugins)
                 {
@@ -180,10 +203,11 @@ int main(int argc, char *argv[])
     // ---------------------------------------------------
     // Check each fit and decide if it passed or failed
     // ---------------------------------------------------
-
+    std::cout<<"//////////////////////////////////////////////////////"<<std::endl;
+    std::cout<<"///Checking if fits passed and filling summary plots//"<<std::endl;
+    std::cout<<"//////////////////////////////////////////////////////"<<std::endl;
     gErrorIgnoreLevel = kPrint;
     TCanvas* c = new TCanvas("c","c",800,800);
-    //TH1F* slopeH = new TH1F("gsel slope","gsel slope",20, 0.5, 1.5);
     for(const auto& ch : resultsMap)
     {
         std::cout<<"-------------"<<ch.first<<"-------------"<<std::endl;
@@ -194,18 +218,11 @@ int main(int argc, char *argv[])
             std::vector<bool> flags;
             checkFit(r, plugins[index], flags, summaryPlots[index]);
             int i = -1;
-            for(const auto& f : flags)
-            {
-                i++;
-                std::cout<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f<<std::endl;
-            }
-
-            //if(plugins[index].plugin == "gselScan")
+            //for(const auto& f : flags)
             //{
-            //    double slope = r->fit1->GetParameter(0);
-            //    slopeH->Fill(slope);
+            //    i++;
+            //    std::cout<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f<<std::endl;
             //}
-            
             delete r;
         }
     }
@@ -219,13 +236,9 @@ int main(int argc, char *argv[])
             s->Draw();
             const std::string& first  = split("first", name, " ");
             const std::string& last  = split("last", name, " ");
-            c->Print(("Summary"+first+"_"+last+".png").c_str());
+            c->Print(("run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
             delete s;
         }
     }
-    
-    //slopeH->Draw();
-    //c->Print("chi2Dist_gselScan.png");
-    //delete slopeH;
     delete c;
 }
