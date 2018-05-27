@@ -36,6 +36,14 @@ public:
 
     PluginPassInfo(std::string plugin_,
                    double chi2Min1_, double chi2Max1_,
+                   double chi2Min2_, double chi2Max2_,
+                   std::vector<SummaryPlotInfo> parNames_)
+        : plugin(plugin_), chi2Min1(chi2Min1_), chi2Max1(chi2Max1_),
+          min1({}), max1({}), parNames(parNames_), 
+          chi2Min2(chi2Min2_), chi2Max2(chi2Max2_), min2({}), max2({}) {}
+
+    PluginPassInfo(std::string plugin_,
+                   double chi2Min1_, double chi2Max1_,
                    std::vector<double> min1_, std::vector<double> max1_,
                    double chi2Min2_, double chi2Max2_,
                    std::vector<double> min2_, std::vector<double> max2_, std::vector<SummaryPlotInfo> parNames_)
@@ -125,30 +133,30 @@ int main(int argc, char *argv[])
     // -------------------------------------------------
     
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
-    //const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 7} };
-    //const int chNum = 7;
-    const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 7} };
+    const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 7} };
     const int chNum = 7;
+    //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 7} };
+    //const int chNum = 7;
     const std::vector<PluginPassInfo>& plugins = {
-        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",20,0,10}, {"slope",20,0,2}, {"y-intercept",20,-2,2}}},
-        {"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",20,0,10}, {"slope",20,0,2}, {"y-intercept",20,-2,2}}},
-        {"pedestalScan",   0.0, 360.0, {2.30, -81.00}, {2.50, -75.00}, {{"chi2Fit1",20,0,500}, {"slope",20,2,3},{"y-intercept",20,-90,-70}}},
-        {"phaseScan",      0.0,  75.0, {20.0, 40.0, 70.0, 89.0, -4.3, -4.3}, {21.0, 45.0, 71.0, 91.0 , -3.8, -3.8}, {{"chi2Fit1",20,0,80},{"switch1",20,15,30},
-                                                                                                                     {"switch2",20,35,55}, {"switch3",20,65,75},
-                                                                                                                     {"switch4",20,80,100}, {"timeConst1",20,-5,-2},{"timeConst2",20,-5,-2}}},
+        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
+        {"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
+        {"pedestalScan",   0.0, 360.0, {2.30, -81.00}, {2.50, -75.00}, {{"chi2Fit1",50,0,10000},{"slope",50,-1,25},{"y-intercept",50,-110,10}}},
+        {"phaseScan",      0.0,  75.0, {20.0, 40.0, 70.0, 89.0, -4.3, -4.3}, {21.0, 45.0, 71.0, 91.0 , -3.8, -3.8}, {{"chi2Fit1",50,0,10000},{"switch1",50,10,33},
+                                                                                                                     {"switch2",50,20,55},   {"switch3",50,55,85},
+                                                                                                                     {"switch4",50,65,100},  {"timeConst1",50,-8,-1},{"timeConst2",50,-8,-1}}},
         {"capID0pedestal", 0.0,  25.0, { 1.4,  4.5}, { 1.6,  5.5},
-         0.0,  18.0, {-1.5, 19.0}, {-1.4, 20.0}, {{"chi2Fit1",20,0,40}, {"slope1",20,1,2}, {"y-intercept1",20,4,6},
-                                                  {"chi2Fit2",20,0,30}, {"slope2",20,-3,0}, {"y-intercept2",20,15,30}}},
+         0.0,  18.0, {-1.5, 19.0}, {-1.4, 20.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
         {"capID1pedestal", 0.0,  30.0, { 1.4,  4.0}, { 1.6,  5.0},
-         0.0,  20.0, {-1.5, 19.0}, {-1.3, 20.0}, {{"chi2Fit1",20,0,40}, {"slope1",20,0,3}, {"y-intercept1",20,3,6},
-                                                  {"chi2Fit2",20,0,30}, {"slope2",20,-3,0}, {"y-intercept2",20,15,30}}},
+         0.0,  20.0, {-1.5, 19.0}, {-1.3, 20.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
         {"capID2pedestal", 0.0,  32.0, { 1.4,  1.0}, { 1.6,  3.0},
-         0.0,  14.0, {-1.6, 16.0}, {-1.3, 18.0}, {{"chi2Fit1",20,0,40}, {"slope1",20,0,3}, {"y-intercept1",20,0,10},
-                                                  {"chi2Fit2",20,0,30}, {"slope2",20,-3,0}, {"y-intercept2",20,10,30}}},
+         0.0,  14.0, {-1.6, 16.0}, {-1.3, 18.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
         {"capID3pedestal", 0.0,  34.0, { 1.4,  1.0}, { 1.6,  2.0},
-         0.0,  25.0, {-1.5, 15.0}, {-1.3, 17.0}, {{"chi2Fit1",20,0,40}, {"slope1",20,0,3}, {"y-intercept1",20,0,3},
-                                                  {"chi2Fit2",20,0,30}, {"slope2",20,-4,0}, {"y-intercept2",20,10,30}}},
-        {"pedestal",   0, 30, {}, {}, 0, 30, {}, {}, {{"mean",20,0,30},{"sigma",20,-2,2}}},
+         0.0,  25.0, {-1.5, 15.0}, {-1.3, 17.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
+        {"pedestal",   0,30, 0,30, {{"mean",50,0,40},{"sigma",50,-2,4}}},
     };
 
     std::vector<std::vector<TH1F*>> summaryPlots;
@@ -159,7 +167,7 @@ int main(int argc, char *argv[])
         {
             std::string name = p.plugin+" "+s.name;
             TH1F* summary = new TH1F(name.c_str(),name.c_str(),s.num,s.min,s.max);
-            summary->GetYaxis()->SetTitle("Channels");;
+            summary->GetYaxis()->SetTitle("Channels");
             summaryVec.push_back(summary);
         }
         summaryPlots.push_back(summaryVec);
@@ -236,6 +244,7 @@ int main(int argc, char *argv[])
             s->Draw();
             const std::string& first  = split("first", name, " ");
             const std::string& last  = split("last", name, " ");
+            s->GetXaxis()->SetTitle(last.c_str());;
             c->Print(("run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
             delete s;
         }
