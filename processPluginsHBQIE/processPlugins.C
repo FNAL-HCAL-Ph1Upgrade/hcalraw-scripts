@@ -169,11 +169,12 @@ int main(int argc, char *argv[])
     std::cout<<"//////////////////////////////////////////////////////"<<std::endl;
     std::cout<<"///Checking if fits passed and filling summary plots//"<<std::endl;
     std::cout<<"//////////////////////////////////////////////////////"<<std::endl;
-    gErrorIgnoreLevel = kPrint;
+    //gErrorIgnoreLevel = kPrint;
+    Json::Value cJson;
     TCanvas* c = new TCanvas("c","c",800,800);
     for(const auto& ch : resultsMap)
     {
-        std::cout<<"-------------"<<ch.first<<"-------------"<<std::endl;
+        //std::cout<<"-------------"<<ch.first<<"-------------"<<std::endl;
         int index = -1;
         for(const auto* r : ch.second)
         {
@@ -181,27 +182,30 @@ int main(int argc, char *argv[])
             std::vector<bool> flags;
             checkFit(r, plugins[index], flags, summaryPlots[index]);
             int i = -1;
-            //for(const auto& f : flags)
-            //{
-            //    i++;
-            //    std::cout<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f<<std::endl;
-            //}
+            for(const auto& f : flags)
+            {
+                i++;
+                //std::cout<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f<<std::endl;
+                cJson["QIE Card"]["Unique ID"][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = int(f);
+            }
             delete r;
         }
     }
 
-    Json::Value event;   
-    Json::Value vec(Json::arrayValue);
-    vec.append(Json::Value(1));
-    vec.append(Json::Value(2));
-    vec.append(Json::Value(3));
-
-    event["competitors"]["home"]["name"] = "Liverpool";
-    event["competitors"]["away"]["code"] = 89223;
-    event["competitors"]["away"]["name"] = "Aston Villa";
-    event["competitors"]["away"]["code"]=vec;
-
-    std::cout << event << std::endl;
+    std::cout<<cJson<<std::endl;
+    
+    //Json::Value event;   
+    //Json::Value vec(Json::arrayValue);
+    //vec.append(Json::Value(1));
+    //vec.append(Json::Value(2));
+    //vec.append(Json::Value(3));
+    //
+    //event["competitors"]["home"]["name"] = "Liverpool";
+    //event["competitors"]["away"]["code"] = 89223;
+    //event["competitors"]["away"]["name"] = "Aston Villa";
+    //event["competitors"]["away"]["code"]=vec;
+    //
+    //std::cout << event << std::endl;
     
     for(const auto& v : summaryPlots)
     {
