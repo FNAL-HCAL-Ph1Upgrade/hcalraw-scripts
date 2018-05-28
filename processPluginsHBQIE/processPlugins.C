@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <json/json.h>
 
@@ -88,10 +89,10 @@ int main(int argc, char *argv[])
     // -------------------------------------------------
     
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
-    //const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 7} };
-    //const int chNum = 7;
-    const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
-    const int chNum = 0;
+    const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 7} };
+    const int chNum = 7;
+    //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
+    //const int chNum = 0;
     const std::vector<PluginPassInfo>& plugins = {
         {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
         {"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
@@ -192,8 +193,15 @@ int main(int argc, char *argv[])
         }
     }
 
-    std::cout<<cJson<<std::endl;
-    
+    std::ofstream file_id("run"+runNum+"/test.json");
+    Json::StreamWriterBuilder wbuilder;
+    std::string outputString = Json::writeString(wbuilder, cJson);
+    file_id << outputString << std::endl;
+
+    /////////////////////////////////
+    //       Temp
+    ////////////////////////////////
+    //std::cout<<cJson<<std::endl;    
     //Json::Value event;   
     //Json::Value vec(Json::arrayValue);
     //vec.append(Json::Value(1));
@@ -206,6 +214,8 @@ int main(int argc, char *argv[])
     //event["competitors"]["away"]["code"]=vec;
     //
     //std::cout << event << std::endl;
+    ///////////////////////////////////
+    ///////////////////////////////////
     
     for(const auto& v : summaryPlots)
     {
