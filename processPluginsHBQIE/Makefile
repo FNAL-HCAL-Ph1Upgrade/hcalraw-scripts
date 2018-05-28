@@ -44,7 +44,7 @@ $(ODIR)/%.o : $(WDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(CXXDEPFLAGS) -o $@ -c $<
 
 
-processPlugins: $(ODIR)/processPlugins.o
+processPlugins: $(ODIR)/processPlugins.o $(ODIR)/jsoncpp.o
 	$(LD) $^ $(LIBS) -o $@
 clean:
 	rm -rf $(ODIR)/*.o $(ODIR)/*.so $(ODIR)/*.d $(PROGRAMS) core $(ODIR)
