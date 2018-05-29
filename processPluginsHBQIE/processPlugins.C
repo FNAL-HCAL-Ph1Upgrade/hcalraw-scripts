@@ -9,31 +9,31 @@
 #include <string>
 #include <json/json.h>
 
-void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<bool>& flags, std::vector<TH1F*>& summaryVec)
+void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<std::vector<double>>& flags, std::vector<TH1F*>& summaryVec)
 {
     if(p.plugin == "pedestal")
     {
         (*summaryVec[0]).Fill(r->mean);
         (*summaryVec[1]).Fill(r->sigma);
-        bool flag = (p.chi2Min1 < r->mean && r->mean < p.chi2Max1) ? true : false;
-        flags.push_back(flag);
-        flag = (p.chi2Min2 < r->sigma && r->sigma < p.chi2Max2) ? true : false;
-        flags.push_back(flag);        
+        double flag = (p.chi2Min1 < r->mean && r->mean < p.chi2Max1) ? 1 : 0;
+        flags.push_back({r->mean, flag});
+        flag = (p.chi2Min2 < r->sigma && r->sigma < p.chi2Max2) ? 1 : 0;
+        flags.push_back({r->sigma, flag});        
     }
     
     if(r->fit1 != nullptr)
     {
         double chi2Fit1 = r->fit1->GetChisquare();
         (*summaryVec[0]).Fill(chi2Fit1);
-        bool flag = (p.chi2Min1 < chi2Fit1 && chi2Fit1 < p.chi2Max1) ? true : false; 
-        flags.push_back(flag);
+        double flag = (p.chi2Min1 < chi2Fit1 && chi2Fit1 < p.chi2Max1) ? 1 : 0; 
+        flags.push_back({chi2Fit1, flag});
     
         for(int pram = 0; pram < p.min1.size(); pram++ )
         {
             double val = r->fit1->GetParameter(pram);
             (*summaryVec[1+pram]).Fill(val);
-            bool flag = (p.min1[pram] < val && val < p.max1[pram]) ? true : false; 
-            flags.push_back(flag);
+            double flag = (p.min1[pram] < val && val < p.max1[pram]) ? 1 : 0; 
+            flags.push_back({val, flag});
         }
     }
     
@@ -41,15 +41,15 @@ void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<bool>& f
     {
         double chi2Fit2 = r->fit2->GetChisquare();
         (*summaryVec[p.min1.size()+1]).Fill(chi2Fit2);        
-        bool flag = (p.chi2Min2 < chi2Fit2 && chi2Fit2 < p.chi2Max2) ? true : false; 
-        flags.push_back(flag);
+        double flag = (p.chi2Min2 < chi2Fit2 && chi2Fit2 < p.chi2Max2) ? 1 : 0; 
+        flags.push_back({chi2Fit2, flag});
         
         for(int pram = 0; pram < p.min2.size(); pram++ )
         {
             double val = r->fit2->GetParameter(pram);
             (*summaryVec[p.min1.size()+2+pram]).Fill(val);        
-            bool flag = (p.min2[pram] < val && val < p.max2[pram]) ? true : false; 
-            flags.push_back(flag);
+            double flag = (p.min2[pram] < val && val < p.max2[pram]) ? 1 : 0; 
+            flags.push_back({val, flag});
         }       
     }
 }
@@ -180,43 +180,29 @@ int main(int argc, char *argv[])
         for(const auto* r : ch.second)
         {
             index++;
-            std::vector<bool> flags;
+            std::vector<std::vector<double>> flags;
             checkFit(r, plugins[index], flags, summaryPlots[index]);
             int i = -1;
             for(const auto& f : flags)
             {
                 i++;
                 //std::cout<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f<<std::endl;
-                cJson["QIE Card"]["Unique ID"][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = int(f);
+                Json::Value vec(Json::arrayValue);
+                vec.append(Json::Value(f[0]));
+                vec.append(Json::Value(f[1]));
+                cJson["Unique ID"][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
             }
             delete r;
         }
     }
 
+    //Make and fill the Json file
     std::ofstream file_id("run"+runNum+"/test.json");
     Json::StreamWriterBuilder wbuilder;
     std::string outputString = Json::writeString(wbuilder, cJson);
     file_id << outputString << std::endl;
 
-    /////////////////////////////////
-    //       Temp
-    ////////////////////////////////
-    //std::cout<<cJson<<std::endl;    
-    //Json::Value event;   
-    //Json::Value vec(Json::arrayValue);
-    //vec.append(Json::Value(1));
-    //vec.append(Json::Value(2));
-    //vec.append(Json::Value(3));
-    //
-    //event["competitors"]["home"]["name"] = "Liverpool";
-    //event["competitors"]["away"]["code"] = 89223;
-    //event["competitors"]["away"]["name"] = "Aston Villa";
-    //event["competitors"]["away"]["code"]=vec;
-    //
-    //std::cout << event << std::endl;
-    ///////////////////////////////////
-    ///////////////////////////////////
-    
+    //Draw and save the summary plots
     for(const auto& v : summaryPlots)
     {
         for(auto* s : v)
