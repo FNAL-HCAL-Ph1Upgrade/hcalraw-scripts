@@ -141,6 +141,15 @@ int main(int argc, char *argv[])
     {
         for(int fib = 0; fib <= sf.second; fib++)
         {
+            TH1::AddDirectory(false);
+            TFile* f = TFile::Open( runFile.c_str() );
+            TH1* id = (TH1*)f->Get( ("UniqueID_Slot_"+sf.first+"_Fib_"+std::to_string(fib)).c_str() );
+            f->Close();
+            delete f;
+            std::string uniqueID = split("first", static_cast<std::string>(id->GetTitle()), " ");
+            std::string iglooType = split("last", static_cast<std::string>(id->GetTitle()), " ");
+            std::cout<<"UniqueID: "<<uniqueID<<" Igloo type: "<<iglooType<<std::endl;
+            if(uniqueID.length() == 0 || uniqueID == "0xFFFFFFFF_0xFFFFFF70") continue;
             for(int ch = 0; ch <= chNum; ch++)
             {
                 std::string channel = "Slot_"+sf.first+"_Fib_"+std::to_string(fib)+"_Ch_"+std::to_string(ch);
@@ -152,7 +161,7 @@ int main(int argc, char *argv[])
                     if(info.plugin == "phaseScan") firstPart = "_Charge_vs_EvtNum_";
     
                     //std::cout << firstPart + channel << std::endl;
-                    RunSummary rs = {info.plugin, runFile, firstPart, channel, runNum};
+                    RunSummary rs = {info.plugin, runFile, firstPart, channel, runNum, uniqueID, iglooType};
                     ProcessPlugins p;
                     //p.processPlugins(r, "", false);
                     p.processPlugins(rs, "Error", false);
@@ -161,6 +170,7 @@ int main(int argc, char *argv[])
                 }
                 resultsMap.insert( std::pair<std::string, std::vector<FitResults*>>(channel, results) );
             }
+            delete id;
         }
     }
     
@@ -190,7 +200,7 @@ int main(int argc, char *argv[])
                 Json::Value vec(Json::arrayValue);
                 vec.append(Json::Value(f[0]));
                 vec.append(Json::Value(f[1]));
-                cJson["Unique ID"][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
+                cJson[r->uniqueID][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
             }
             delete r;
         }

@@ -25,6 +25,8 @@ public:
     const std::string& histVar;
     const std::string& channel;
     const std::string& runNum;
+    const std::string& uniqueID;
+    const std::string& iglooType;
 };
 
 class FitResults
@@ -34,6 +36,7 @@ public:
     TF1* fit2;
     double mean;
     double sigma;
+    std::string uniqueID;
     
     void setVar(const std::string& name, TF1* var)
     {
@@ -46,8 +49,13 @@ public:
         if(name == "mean") mean = var;
         else if(name == "sigma") sigma = var;
     }
+
+    void setVar(const std::string& name, std::string var)
+    {
+        if(name == "uniqueID") uniqueID = var;
+    }
     
-    FitResults() : fit1(nullptr), fit2(nullptr), mean(0), sigma(0)
+    FitResults() : fit1(nullptr), fit2(nullptr), mean(0), sigma(0), uniqueID("")
     {
     }
 
@@ -112,7 +120,7 @@ private:
     {
     public:
         std::vector<double> known;
-        std::string plugin, histName, histNameX, histNameY, runNum, channel;
+        std::string plugin, histName, histNameX, histNameY, runNum, channel, uniqueID, iglooType;
         int nEvents;
         bool verb;
         TH1* scan;
@@ -138,7 +146,7 @@ private:
             tdc   = t;
         }
         
-        void set(std::vector<double> known_, std::string plugin_, std::string histName_, std::string histNameX_, std::string histNameY_, std::string runNum_, std::string channel_,
+        void set(std::vector<double> known_, std::string plugin_, std::string histName_, std::string histNameX_, std::string histNameY_, std::string runNum_, std::string channel_, std::string uniqueID_, std::string iglooType_,
                  int nEvents_, bool verb_, TH1* scan_,
                  bool first_,
                  double min1_,  double max1_,  double set1_,  double min2_,  double max2_,  double set2_,  double min3_,  double max3_,  double set3_,  double min4_, double max4_, double set4_,
@@ -149,7 +157,7 @@ private:
                  double gxmin_, double gxmax_, double gymin_, double gymax_,
                  TH1* TDC_ = nullptr)
         {
-            known = known_; plugin = plugin_; histName = histName_; histNameX = histNameX_; histNameY = histNameY_; runNum = runNum_; channel = channel_;
+            known = known_; plugin = plugin_; histName = histName_; histNameX = histNameX_; histNameY = histNameY_; runNum = runNum_; channel = channel_; uniqueID = uniqueID_; iglooType = iglooType_;
             nEvents = nEvents_; verb = verb_; scan = scan_; 
             first = first_;
             min1 = min1_;   max1 = max1_;   set1 = set1_;   min2 = min2_;   max2 = max2_;   set2 = set2_;   min3 = min3_;   max3 = max3_;   set3 = set3_;   min4 = min4_; max4 = max4_; set4 = set4_;
@@ -365,13 +373,14 @@ private:
             if(p->verb) printFitInfo(fit2);
         }
 
-        std::string path = "run"+p->runNum+"/"+p->channel+"/";
+        std::string path = "run"+p->runNum+"/"+p->uniqueID+"/"+p->channel+"/";
         gSystem->Exec( ("mkdir -p "+path).c_str() );
         c1->Print((path+p->histName+".png").c_str());
 
         fitResults = new FitResults();
         fitResults->setVar("fit1", fit1);
         fitResults->setVar("fit2", fit2);
+        fitResults->setVar("uniqueID", p->uniqueID);
         if (p->plugin == "pedestal")
         {
             fitResults->setVar("mean", p->mean[0]);
@@ -514,7 +523,7 @@ public:
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Measured Gain", "Reference Gain", r.runNum, r.channel, 100, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Measured Gain", "Reference Gain", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
                    0,2,1, -1,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    0, 1.1,
@@ -531,7 +540,7 @@ public:
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({90, 180, 360, 720, 1440, 2880, 5760, 8640},
                    //{90, 180, 360, 62, 15400, 2880, 5760, 8640}, //test
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", r.runNum, r.channel, 100, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
                    0,2,1, -1,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    0, 1.1,
@@ -547,7 +556,7 @@ public:
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, 100, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
                    0,20,10, -100,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    33, 65,
@@ -565,7 +574,7 @@ public:
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, 100, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
                    0,20,1, -100,10,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    9, 16,
@@ -588,7 +597,7 @@ public:
             TH1* t2 = (TH1*)f->Get( (r.plugin+"_TS_2_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t2);
             TH1* t3 = (TH1*)f->Get( (r.plugin+"_TS_3_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t3);
             p1->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_1_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, 100, verb, s1,
+                    r.plugin, "Run"+r.runNum+"_TS_1_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s1,
                     false,
                     0,100,0, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 72,
@@ -599,7 +608,7 @@ public:
                     t1
                 );
             p2->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_2_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, 100, verb, s2,
+                    r.plugin, "Run"+r.runNum+"_TS_2_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s2,
                     true,
                     6000,7000,6500, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     55, 90,
@@ -610,7 +619,7 @@ public:
                     t2
                 );
             p3->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_3_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, 100, verb, s3,
+                    r.plugin, "Run"+r.runNum+"_TS_3_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s3,
                     true,
                     6000,7000,6500, -100,-3,-5, 0,30,25.5, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 40,
@@ -626,7 +635,7 @@ public:
 
             phaseInfo = new PluginSummary();
             phaseInfo->set({},
-                           r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge Weighted TS", r.runNum, r.channel, 100, verb, s1,
+                           r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge Weighted TS", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s1,
                            true,
                            20,23,21, 30,45,33, 65,75,70, 75,90,85, -5.5,-3.5,-4, -5.5,-3.5,-4,
                            0, 114,
@@ -641,7 +650,7 @@ public:
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, 1000, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 1000, verb, s,
                    false,
                    0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    0, 0,
