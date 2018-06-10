@@ -696,9 +696,9 @@ public:
             else if(gType == "Error")
                 processRatios<TGraphErrors>(pVec[0]);
         }
-        else if(r.plugin == "pedestalScan"
-                || r.plugin == "capID0pedestal" || r.plugin == "capID1pedestal"
-                || r.plugin == "capID2pedestal" || r.plugin == "capID3pedestal")
+        else if(r.plugin == "pedestal"       || r.plugin == "pedestalScan"   ||
+                r.plugin == "capID0pedestal" || r.plugin == "capID1pedestal" ||
+                r.plugin == "capID2pedestal" || r.plugin == "capID3pedestal")
         {
             if(gType == "")
                 processMeans<TGraph>(pVec[0]);
@@ -717,10 +717,6 @@ public:
                 processPhaseScan<TGraphErrors>(pVec);
                 processPhaseScan<TGraphErrors>(phaseInfo, pVec);
             }
-        }
-        else if(r.plugin == "pedestal")
-        {
-            processMeans<TGraphErrors>(pVec[0]);
         }
         
         for(auto* p : pVec){delete p;}

@@ -148,8 +148,8 @@ int main(int argc, char *argv[])
             delete f;
             std::string uniqueID = split("first", static_cast<std::string>(id->GetTitle()), " ");
             std::string iglooType = split("last", static_cast<std::string>(id->GetTitle()), " ");
-            std::cout<<"UniqueID: "<<uniqueID<<" Igloo type: "<<iglooType<<std::endl;
             if(uniqueID.length() == 0 || uniqueID == "0xFFFFFFFF_0xFFFFFF70") continue;
+            std::cout<<"UniqueID: "<<uniqueID<<" Igloo type: "<<iglooType<<std::endl;
             for(int ch = 0; ch <= chNum; ch++)
             {
                 std::string channel = "Slot_"+sf.first+"_Fib_"+std::to_string(fib)+"_Ch_"+std::to_string(ch);
