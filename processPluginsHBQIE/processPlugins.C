@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <set>
 #include <json/json.h>
 
 void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<std::vector<double>>& flags, std::vector<TH1F*>& summaryVec)
@@ -136,6 +137,7 @@ int main(int argc, char *argv[])
     std::cout<<"//////////////Making Map of the Fit Results///////////"<<std::endl;
     std::cout<<"//////////////////////////////////////////////////////"<<std::endl;
     gErrorIgnoreLevel = kWarning;
+    std::set<std::string> uniqueIDs;
     std::map<std::string, std::vector<FitResults*>> resultsMap;
     for(const auto& sf : SLOTS_FIBERS)
     {
@@ -162,6 +164,7 @@ int main(int argc, char *argv[])
     
                     //std::cout << firstPart + channel << std::endl;
                     RunSummary rs = {info.plugin, runFile, firstPart, channel, runNum, uniqueID, iglooType};
+                    uniqueIDs.insert(uniqueID);
                     ProcessPlugins p;
                     //p.processPlugins(r, "", false);
                     p.processPlugins(rs, "Error", false);
@@ -172,6 +175,14 @@ int main(int argc, char *argv[])
             }
             delete id;
         }
+    }
+
+    //Prepare jsonMap for each QIE card
+    std::map<std::string, Json::Value> jsonMap;
+    for(auto& id : uniqueIDs)
+    {
+        Json::Value j;
+        jsonMap.insert( std::pair<std::string, Json::Value>(id, j) );
     }
     
     // ---------------------------------------------------
@@ -201,6 +212,7 @@ int main(int argc, char *argv[])
                 vec.append(Json::Value(f[0]));
                 vec.append(Json::Value(f[1]));
                 cJson[r->uniqueID][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
+                jsonMap[r->uniqueID][r->uniqueID][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
             }
             delete r;
         }
@@ -211,6 +223,13 @@ int main(int argc, char *argv[])
     Json::StreamWriterBuilder wbuilder;
     std::string outputString = Json::writeString(wbuilder, cJson);
     file_id << outputString << std::endl;
+    for(auto& j : jsonMap)
+    {
+        std::ofstream file_id("run"+runNum+"/"+j.first+"/test.json");
+        Json::StreamWriterBuilder wbuilder;
+        std::string outputString = Json::writeString(wbuilder, j.second);
+        file_id << outputString << std::endl;        
+    }
 
     //Draw and save the summary plots
     for(const auto& v : summaryPlots)
