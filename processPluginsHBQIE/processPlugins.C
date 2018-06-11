@@ -148,10 +148,13 @@ int main(int argc, char *argv[])
             TH1* id = (TH1*)f->Get( ("UniqueID_Slot_"+sf.first+"_Fib_"+std::to_string(fib)).c_str() );
             f->Close();
             delete f;
-            std::string uniqueID = split("first", static_cast<std::string>(id->GetTitle()), " ");
-            std::string iglooType = split("last", static_cast<std::string>(id->GetTitle()), " ");
+            std::string uniqueID  = split("first", static_cast<std::string>(id->GetTitle()), " ");
+            std::string iglooInfo = split("last",  static_cast<std::string>(id->GetTitle()), " ");
+            std::string iglooType = split("first", iglooInfo, " ");
+            std::string major     = split("first", split("last", iglooInfo, " "), "_");
+            std::string minor     = split("last",  split("last", iglooInfo, " "), "_");
             if(uniqueID.length() == 0 || uniqueID == "0xFFFFFFFF_0xFFFFFF70") continue;
-            std::cout<<"UniqueID: "<<uniqueID<<" Igloo type: "<<iglooType<<std::endl;
+            std::cout<<"UniqueID: "<<uniqueID<<" Igloo type: "<<iglooType<<" Major: "<<major<<" Minor: "<<minor<<std::endl;
             for(int ch = 0; ch <= chNum; ch++)
             {
                 std::string channel = "Slot_"+sf.first+"_Fib_"+std::to_string(fib)+"_Ch_"+std::to_string(ch);
@@ -211,22 +214,24 @@ int main(int argc, char *argv[])
                 Json::Value vec(Json::arrayValue);
                 vec.append(Json::Value(f[0]));
                 vec.append(Json::Value(f[1]));
-                cJson[r->uniqueID][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
-                jsonMap[r->uniqueID][r->uniqueID][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
+                cJson[r->uniqueID][r->iglooType][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
+                jsonMap[r->uniqueID][r->uniqueID][r->iglooType][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
             }
             delete r;
         }
     }
 
     //Make and fill the Json file
-    std::ofstream file_id("run"+runNum+"/test.json");
+    std::ofstream file_id("run"+runNum+"/run"+runNum+"_QC.json");
     Json::StreamWriterBuilder wbuilder;
+    wbuilder.settings_["indentation"] = "";
     std::string outputString = Json::writeString(wbuilder, cJson);
     file_id << outputString << std::endl;
     for(auto& j : jsonMap)
     {
-        std::ofstream file_id("run"+runNum+"/"+j.first+"/test.json");
+        std::ofstream file_id("run"+runNum+"/"+j.first+"/"+j.first+"_QC.json");
         Json::StreamWriterBuilder wbuilder;
+        wbuilder.settings_["indentation"] = "";
         std::string outputString = Json::writeString(wbuilder, j.second);
         file_id << outputString << std::endl;        
     }

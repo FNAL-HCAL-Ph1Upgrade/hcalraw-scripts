@@ -37,6 +37,7 @@ public:
     double mean;
     double sigma;
     std::string uniqueID;
+    std::string iglooType;
     
     void setVar(const std::string& name, TF1* var)
     {
@@ -53,6 +54,7 @@ public:
     void setVar(const std::string& name, std::string var)
     {
         if(name == "uniqueID") uniqueID = var;
+        else if(name == "iglooType") iglooType = var;
     }
     
     FitResults() : fit1(nullptr), fit2(nullptr), mean(0), sigma(0), uniqueID("")
@@ -380,7 +382,8 @@ private:
         fitResults = new FitResults();
         fitResults->setVar("fit1", fit1);
         fitResults->setVar("fit2", fit2);
-        fitResults->setVar("uniqueID", p->uniqueID);
+        fitResults->setVar("uniqueID",  p->uniqueID);
+        fitResults->setVar("iglooType", p->iglooType);
         if (p->plugin == "pedestal")
         {
             fitResults->setVar("mean", p->mean[0]);
