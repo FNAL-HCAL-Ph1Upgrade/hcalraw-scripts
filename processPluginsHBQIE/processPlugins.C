@@ -148,13 +148,14 @@ int main(int argc, char *argv[])
             TH1* id = (TH1*)f->Get( ("UniqueID_Slot_"+sf.first+"_Fib_"+std::to_string(fib)).c_str() );
             f->Close();
             delete f;
-            std::string uniqueID  = split("first", static_cast<std::string>(id->GetTitle()), " ");
-            std::string iglooInfo = split("last",  static_cast<std::string>(id->GetTitle()), " ");
+	    std::string uIDresult = split("first", static_cast<std::string>(id->GetTitle()), " ");
+            std::string uniqueID  = split("first", split("last", static_cast<std::string>(id->GetTitle()), " "), " ");
+            std::string iglooInfo = split("last", split("last", static_cast<std::string>(id->GetTitle()), " "), " ");
             std::string iglooType = split("first", iglooInfo, " ");
             std::string major     = split("first", split("last", iglooInfo, " "), "_");
             std::string minor     = split("last",  split("last", iglooInfo, " "), "_");
-            if(uniqueID.length() == 0 || uniqueID == "0xFFFFFFFF_0xFFFFFF70") continue;
-            std::cout<<"UniqueID: "<<uniqueID<<" Igloo type: "<<iglooType<<" Major: "<<major<<" Minor: "<<minor<<std::endl;
+            if(uIDresult == "FAIL" || uniqueID.length() == 0 || uniqueID == "0xFFFFFFFF_0xFFFFFF70") continue;
+            std::cout<<"Linktest mode: "<<uIDresult<<" UniqueID: "<<uniqueID<<" Igloo type: "<<iglooType<<" Major: "<<major<<" Minor: "<<minor<<std::endl;
             for(int ch = 0; ch <= chNum; ch++)
             {
                 std::string channel = "Slot_"+sf.first+"_Fib_"+std::to_string(fib)+"_Ch_"+std::to_string(ch);
@@ -222,14 +223,14 @@ int main(int argc, char *argv[])
     }
 
     //Make and fill the Json file
-    std::ofstream file_id("run"+runNum+"/run"+runNum+"_QC.json");
+    std::ofstream file_id("QC_run"+runNum+"/run"+runNum+"_QC.json");
     Json::StreamWriterBuilder wbuilder;
-    wbuilder.settings_["indentation"] = "";
+    //wbuilder.settings_["indentation"] = "";
     std::string outputString = Json::writeString(wbuilder, cJson);
     file_id << outputString << std::endl;
     for(auto& j : jsonMap)
     {
-        std::ofstream file_id("run"+runNum+"/"+j.first+"/"+j.first+"_QC.json");
+        std::ofstream file_id("QC_run"+runNum+"/"+j.first+"/"+j.first+"_QC.json");
         Json::StreamWriterBuilder wbuilder;
         wbuilder.settings_["indentation"] = "";
         std::string outputString = Json::writeString(wbuilder, j.second);
@@ -247,7 +248,7 @@ int main(int argc, char *argv[])
             const std::string& first  = split("first", name, " ");
             const std::string& last  = split("last", name, " ");
             s->GetXaxis()->SetTitle(last.c_str());;
-            c->Print(("run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
+            c->Print(("QC_run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
             delete s;
         }
     }

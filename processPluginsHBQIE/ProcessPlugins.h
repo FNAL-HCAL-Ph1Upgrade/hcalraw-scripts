@@ -375,7 +375,7 @@ private:
             if(p->verb) printFitInfo(fit2);
         }
 
-        std::string path = "run"+p->runNum+"/"+p->uniqueID+"/"+p->channel+"/";
+        std::string path = "QC_run"+p->runNum+"/"+p->uniqueID+"/"+p->channel+"/";
         gSystem->Exec( ("mkdir -p "+path).c_str() );
         c1->Print((path+p->histName+".png").c_str());
 
