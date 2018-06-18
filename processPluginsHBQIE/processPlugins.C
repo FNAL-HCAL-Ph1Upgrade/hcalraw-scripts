@@ -215,8 +215,11 @@ int main(int argc, char *argv[])
                 Json::Value vec(Json::arrayValue);
                 vec.append(Json::Value(f[0]));
                 vec.append(Json::Value(f[1]));
+		//Json per run
                 cJson[r->uniqueID][r->iglooType][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
+		//Json per card
                 jsonMap[r->uniqueID][r->uniqueID][r->iglooType][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
+		jsonMap[r->uniqueID]["Unique_ID"] = r->uniqueID;
             }
             delete r;
         }
