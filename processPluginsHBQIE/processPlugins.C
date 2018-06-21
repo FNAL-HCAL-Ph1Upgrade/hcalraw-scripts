@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     // -------------------------------------------------
     
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
-    const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 7} };
+    const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 23} };
     const int chNum = 7;
     //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
     //const int chNum = 0;
@@ -145,7 +145,9 @@ int main(int argc, char *argv[])
         {
             TH1::AddDirectory(false);
             TFile* f = TFile::Open( runFile.c_str() );
-            TH1* id = (TH1*)f->Get( ("UniqueID_Slot_"+sf.first+"_Fib_"+std::to_string(fib)).c_str() );
+	    std::string uIDName = "UniqueID_Slot_"+sf.first+"_Fib_"+std::to_string(fib);
+	    if (!f->GetListOfKeys()->Contains(uIDName.c_str())) continue;
+            TH1* id = (TH1*)f->Get(uIDName.c_str());
             f->Close();
             delete f;
 	    std::string uIDresult = split("first", static_cast<std::string>(id->GetTitle()), " ");

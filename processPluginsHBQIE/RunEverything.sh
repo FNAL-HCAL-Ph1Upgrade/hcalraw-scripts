@@ -15,7 +15,7 @@ UploadDir=/home/django/testing_database_hb/media/uploads/run_control
 ##################################################
 echo "Running the register test"
 cd /home/hcalpro/GITrepos/Common
-./registerTest_run.sh
+python RunRegisterTest.py $runNum 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
 
 ##################################################
 # Processes the output of run control
@@ -39,7 +39,7 @@ ssh $REMOTEHOST 'cd '$UploadDir'/ && mkdir run'${runNum}'_output'
 
 echo "Moving files to cmshcal11"
 #Output of Frank's register test
-rsync -r /home/hcalpro/GITrepos/Common/registerTestResults $REMOTEHOST:$UploadDir/run${runNum}_output/.
+rsync -r /home/hcalpro/GITrepos/Common/registerTestResults/run$runNum $REMOTEHOST:$UploadDir/run${runNum}_output/.
 
 #Output of run control
 rsync  /tmp/FNAL_000$runNum.root $REMOTEHOST:$UploadDir/run${runNum}_output/.
