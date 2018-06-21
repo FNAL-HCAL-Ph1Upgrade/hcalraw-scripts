@@ -39,7 +39,7 @@ ssh $REMOTEHOST 'cd '$UploadDir'/ && mkdir run'${runNum}'_output'
 
 echo "Moving files to cmshcal11"
 #Output of Frank's register test
-rsync -r /home/hcalpro/GITrepos/Common/registerTestResults/run$runNum $REMOTEHOST:$UploadDir/run${runNum}_output/.
+rsync -r /home/hcalpro/GITrepos/Common/registerTestResults/Reg_run$runNum $REMOTEHOST:$UploadDir/run${runNum}_output/.
 
 #Output of run control
 rsync  /tmp/FNAL_000$runNum.root $REMOTEHOST:$UploadDir/run${runNum}_output/.
@@ -48,4 +48,4 @@ rsync  /tmp/FNAL_000$runNum.root $REMOTEHOST:$UploadDir/run${runNum}_output/.
 rsync /home/hcalpro/hcalraw/output/run$runNum-master.root $REMOTEHOST:$UploadDir/run${runNum}_output/.
 
 #Output of Chris' QC code 
-rsync -r /home/hcalpro/hcalraw-scripts/processPluginsHBQIE/QC_run$runNum $REMOTEHOST:$UploadDir/run${runNum}_output/.
+rsync -r /home/hcalpro/hcalraw-scripts/processPluginsHBQIE/qcTestResults/QC_run$runNum $REMOTEHOST:$UploadDir/run${runNum}_output/.
