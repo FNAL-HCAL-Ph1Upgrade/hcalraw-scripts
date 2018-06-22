@@ -42,9 +42,9 @@ echo "Moving files to cmshcal11"
 rsync -r /home/hcalpro/GITrepos/Common/registerTestResults/Reg_run$runNum $REMOTEHOST:$UploadDir/run${runNum}_output/.
 
 #Output of run control
-rsync  /tmp/FNAL_000$runNum.root $REMOTEHOST:$UploadDir/run${runNum}_output/.
+rsync  /home/hcalpro/DATA/FNAL_000$runNum.root $REMOTEHOST:$UploadDir/run${runNum}_output/.
 
-#Output of Marks' plugin
+#Output of Mark's plugin
 rsync /home/hcalpro/hcalraw/output/run$runNum-master.root $REMOTEHOST:$UploadDir/run${runNum}_output/.
 
 #Output of Chris' QC code 

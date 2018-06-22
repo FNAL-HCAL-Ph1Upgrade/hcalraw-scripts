@@ -17,6 +17,9 @@
 #include <vector>
 #include <math.h>
 
+//Adding a ugly global for the phase scan 
+std::vector<int> whichTS;// = {1,2,3};
+
 class RunSummary
 {
 public:
@@ -198,15 +201,15 @@ private:
         //p[0]: switch 1, p[1]: switch 2, p[2]: switch 3, p[3]: switch 4, p[4]: time const 1, p[5]: time const 2
         double val = 0;
         if(x[0] < p[0] )
-            val = 3; 
+            val = whichTS[2]; 
         else if(p[0] < x[0] && x[0] < p[1])
-            val = exp((x[0]-p[0])/p[4]) + 2;
+            val = exp((x[0]-p[0])/p[4]) + whichTS[1];
         else if(p[1] < x[0] && x[0] < p[2])
-            val = 2;
+            val = whichTS[1];
         else if(p[2] < x[0] && x[0] < p[3])
-            val = exp((x[0]-p[2])/p[5]) + 1;
+            val = exp((x[0]-p[2])/p[5]) + whichTS[0];
         else
-            val = 1;
+            val = whichTS[0];
         //if(x[0] < p[0] )
         //    val = 3; 
         //else if(p[0] < x[0] && x[0] < p[1])
@@ -477,7 +480,7 @@ private:
     template<typename G> void processPhaseScan(PluginSummary* p, const std::vector<PluginSummary*>& pVec)
     {
         std::vector<double> x, y, xError, yError;
-        std::vector<double> timeSlice = {1, 2, 3};
+        //std::vector<double> timeSlice = {1, 2, 3};
         p->setMeanTS(true);
         for(int t = 0; t < pVec[0]->mean.size(); t++)
         {
@@ -489,7 +492,7 @@ private:
             for(auto* p : pVec)
             {
                 index++;
-                num += timeSlice[index]*p->mean[t];
+                num += whichTS[index]*p->mean[t];
                 den += p->mean[t];
                 //std::cout<<p->tdc[t]<<std::endl;
             }
@@ -593,14 +596,14 @@ public:
             PluginSummary* p1 = new PluginSummary();
             PluginSummary* p2 = new PluginSummary();
             PluginSummary* p3 = new PluginSummary();
-            TH1* s1 = (TH1*)f->Get( (r.plugin+"_TS_1"+r.histVar+r.channel).c_str() );
-            TH1* s2 = (TH1*)f->Get( (r.plugin+"_TS_2"+r.histVar+r.channel).c_str() );
-            TH1* s3 = (TH1*)f->Get( (r.plugin+"_TS_3"+r.histVar+r.channel).c_str() );
-            TH1* t1 = (TH1*)f->Get( (r.plugin+"_TS_1_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t1);
-            TH1* t2 = (TH1*)f->Get( (r.plugin+"_TS_2_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t2);
-            TH1* t3 = (TH1*)f->Get( (r.plugin+"_TS_3_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t3);
+            TH1* s1 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[0])+r.histVar+r.channel).c_str() );
+            TH1* s2 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[1])+r.histVar+r.channel).c_str() );
+            TH1* s3 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[2])+r.histVar+r.channel).c_str() );
+            TH1* t1 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[0])+"_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t1);
+            TH1* t2 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[1])+"_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t2);
+            TH1* t3 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[3])+"_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t3);
             p1->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_1_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s1,
+                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[0])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s1,
                     false,
                     0,100,0, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 72,
@@ -611,7 +614,7 @@ public:
                     t1
                 );
             p2->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_2_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s2,
+                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[1])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s2,
                     true,
                     6000,7000,6500, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     55, 90,
@@ -622,7 +625,7 @@ public:
                     t2
                 );
             p3->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_3_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s3,
+                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[2])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s3,
                     true,
                     6000,7000,6500, -100,-3,-5, 0,30,25.5, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 40,
@@ -645,7 +648,7 @@ public:
                            false,
                            0,0,0, 0,0,0, 0,0,0,
                            0, 0,
-                           0, 100, 0, 5.5
+                           0, 100, whichTS[2]-3, whichTS[2]+2.5
                 );
         }
         else if(r.plugin == "pedestal")

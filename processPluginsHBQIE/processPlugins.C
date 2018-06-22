@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
     const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 23} };
     const int chNum = 7;
+    whichTS = {1,2,3};
     //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
     //const int chNum = 0;
     const std::vector<PluginPassInfo>& plugins = {

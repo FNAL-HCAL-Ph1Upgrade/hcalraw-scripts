@@ -46,6 +46,11 @@ $(ODIR)/%.o : $(WDIR)/%.cpp
 
 processPlugins: $(ODIR)/processPlugins.o $(ODIR)/jsoncpp.o
 	$(LD) $^ $(LIBS) -o $@
+
+processGsel: $(ODIR)/processGsel.o $(ODIR)/jsoncpp.o
+	$(LD) $^ $(LIBS) -o $@
+
+
 clean:
 	rm -rf $(ODIR)/*.o $(ODIR)/*.so $(ODIR)/*.d $(PROGRAMS) core $(ODIR)
 
