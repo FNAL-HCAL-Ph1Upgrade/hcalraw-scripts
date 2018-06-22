@@ -228,14 +228,14 @@ int main(int argc, char *argv[])
     }
 
     //Make and fill the Json file
-    std::ofstream file_id("QC_run"+runNum+"/run"+runNum+"_QC.json");
+    std::ofstream file_id("qcTestResults/QC_run"+runNum+"/run"+runNum+"_QC.json");
     Json::StreamWriterBuilder wbuilder;
     //wbuilder.settings_["indentation"] = "";
     std::string outputString = Json::writeString(wbuilder, cJson);
     file_id << outputString << std::endl;
     for(auto& j : jsonMap)
     {
-        std::ofstream file_id("QC_run"+runNum+"/"+j.first+"/"+j.first+"_QC.json");
+        std::ofstream file_id("qcTestResults/QC_run"+runNum+"/"+j.first+"/"+j.first+"_QC.json");
         Json::StreamWriterBuilder wbuilder;
         wbuilder.settings_["indentation"] = "";
         std::string outputString = Json::writeString(wbuilder, j.second);
@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
             const std::string& first  = split("first", name, " ");
             const std::string& last  = split("last", name, " ");
             s->GetXaxis()->SetTitle(last.c_str());;
-            c->Print(("QC_run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
+            c->Print(("qcTestResults/QC_run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
             delete s;
         }
     }
