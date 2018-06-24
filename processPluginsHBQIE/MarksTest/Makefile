@@ -23,7 +23,7 @@ INCLUDES += $(shell $(PYTHONCFG) --includes)
 
 LIBS      = $(shell root-config --glibs)
 
-PROGRAMS = processPlugins 
+PROGRAMS = processPhase processGsel
 
 all: mkobj $(PROGRAMS)
 
@@ -44,7 +44,7 @@ $(ODIR)/%.o : $(WDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(CXXDEPFLAGS) -o $@ -c $<
 
 
-processPlugins: $(ODIR)/processPlugins.o $(ODIR)/jsoncpp.o
+processPhase: $(ODIR)/processPhase.o $(ODIR)/jsoncpp.o
 	$(LD) $^ $(LIBS) -o $@
 
 processGsel: $(ODIR)/processGsel.o $(ODIR)/jsoncpp.o

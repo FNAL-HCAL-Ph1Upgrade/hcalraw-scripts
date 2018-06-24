@@ -1,4 +1,4 @@
-#include "ProcessPlugins.h"
+#include "../ProcessPlugins.h"
 
 #include <getopt.h>
 #include <cmath>
@@ -90,31 +90,33 @@ int main(int argc, char *argv[])
     // -------------------------------------------------
     
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
-    const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 23} };
+    std::vector<int> uHTR1Fibs = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+    std::vector<int> uHTR2Fibs = {};
+    const std::map<std::string, std::vector<int>> SLOTS_FIBERS = { {"1", uHTR1Fibs}, {"2", uHTR2Fibs} };
     const int chNum = 7;
-    whichTS = {1,2,3};
+    whichTS = {4,5,6};
     //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
     //const int chNum = 0;
     const std::vector<PluginPassInfo>& plugins = {
-        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
-        {"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
-        {"pedestalScan",   0.0, 360.0, {2.30, -81.00}, {2.50, -75.00}, {{"chi2Fit1",50,0,10000},{"slope",50,-1,25},{"y-intercept",50,-110,10}}},
+        //{"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
+        //{"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
+        //{"pedestalScan",   0.0, 360.0, {2.30, -81.00}, {2.50, -75.00}, {{"chi2Fit1",50,0,10000},{"slope",50,-1,25},{"y-intercept",50,-110,10}}},
         {"phaseScan",      0.0,  75.0, {20.0, 40.0, 70.0, 89.0, -4.3, -4.3}, {21.0, 45.0, 71.0, 91.0 , -3.8, -3.8}, {{"chi2Fit1",50,0,10000},{"switch1",50,10,33},
                                                                                                                      {"switch2",50,20,55},   {"switch3",50,55,85},
                                                                                                                      {"switch4",50,65,100},  {"timeConst1",50,-8,-1},{"timeConst2",50,-8,-1}}},
-        {"capID0pedestal", 0.0,  25.0, { 1.4,  4.5}, { 1.6,  5.5},
-         0.0,  18.0, {-1.5, 19.0}, {-1.4, 20.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
-                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
-        {"capID1pedestal", 0.0,  30.0, { 1.4,  4.0}, { 1.6,  5.0},
-         0.0,  20.0, {-1.5, 19.0}, {-1.3, 20.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
-                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
-        {"capID2pedestal", 0.0,  32.0, { 1.4,  1.0}, { 1.6,  3.0},
-         0.0,  14.0, {-1.6, 16.0}, {-1.3, 18.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
-                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
-        {"capID3pedestal", 0.0,  34.0, { 1.4,  1.0}, { 1.6,  2.0},
-         0.0,  25.0, {-1.5, 15.0}, {-1.3, 17.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
-                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
-        {"pedestal",   0,30, 0,30, {{"mean",50,0,40},{"sigma",50,-2,4}}},
+        //{"capID0pedestal", 0.0,  25.0, { 1.4,  4.5}, { 1.6,  5.5},
+        // 0.0,  18.0, {-1.5, 19.0}, {-1.4, 20.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+        //                                          {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
+        //{"capID1pedestal", 0.0,  30.0, { 1.4,  4.0}, { 1.6,  5.0},
+        // 0.0,  20.0, {-1.5, 19.0}, {-1.3, 20.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+        //                                          {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
+        //{"capID2pedestal", 0.0,  32.0, { 1.4,  1.0}, { 1.6,  3.0},
+        // 0.0,  14.0, {-1.6, 16.0}, {-1.3, 18.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+        //                                          {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
+        //{"capID3pedestal", 0.0,  34.0, { 1.4,  1.0}, { 1.6,  2.0},
+        // 0.0,  25.0, {-1.5, 15.0}, {-1.3, 17.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+        //                                          {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
+        //{"pedestal",   0,30, 0,30, {{"mean",50,0,40},{"sigma",50,-2,4}}},
     };
 
     std::vector<std::vector<TH1F*>> summaryPlots;
@@ -142,23 +144,25 @@ int main(int argc, char *argv[])
     std::map<std::string, std::vector<FitResults*>> resultsMap;
     for(const auto& sf : SLOTS_FIBERS)
     {
-        for(int fib = 0; fib <= sf.second; fib++)
+        for(const auto& fib : sf.second)
         {
             TH1::AddDirectory(false);
-            TFile* f = TFile::Open( runFile.c_str() );
-	    std::string uIDName = "UniqueID_Slot_"+sf.first+"_Fib_"+std::to_string(fib);
-	    if (!f->GetListOfKeys()->Contains(uIDName.c_str())) continue;
-            TH1* id = (TH1*)f->Get(uIDName.c_str());
-            f->Close();
-            delete f;
-	    std::string uIDresult = split("first", static_cast<std::string>(id->GetTitle()), " ");
-            std::string uniqueID  = split("first", split("last", static_cast<std::string>(id->GetTitle()), " "), " ");
-            std::string iglooInfo = split("last", split("last", static_cast<std::string>(id->GetTitle()), " "), " ");
-            std::string iglooType = split("first", iglooInfo, " ");
-            std::string major     = split("first", split("last", iglooInfo, " "), "_");
-            std::string minor     = split("last",  split("last", iglooInfo, " "), "_");
-            if(uIDresult == "FAIL" || uniqueID.length() == 0 || uniqueID == "0xFFFFFFFF_0xFFFFFF70") continue;
-            std::cout<<"Linktest mode: "<<uIDresult<<" UniqueID: "<<uniqueID<<" Igloo type: "<<iglooType<<" Major: "<<major<<" Minor: "<<minor<<std::endl;
+            //TFile* f = TFile::Open( runFile.c_str() );
+	    //std::string uIDName = "UniqueID_Slot_"+sf.first+"_Fib_"+std::to_string(fib);
+	    //if (!f->GetListOfKeys()->Contains(uIDName.c_str())) continue;
+            //TH1* id = (TH1*)f->Get(uIDName.c_str());
+            //f->Close();
+            //delete f;
+	    //std::string uIDresult = split("first", static_cast<std::string>(id->GetTitle()), " ");
+            //std::string uniqueID  = split("first", split("last", static_cast<std::string>(id->GetTitle()), " "), " ");
+            //std::string iglooInfo = split("last", split("last", static_cast<std::string>(id->GetTitle()), " "), " ");
+            //std::string iglooType = split("first", iglooInfo, " ");
+            //std::string major     = split("first", split("last", iglooInfo, " "), "_");
+            //std::string minor     = split("last",  split("last", iglooInfo, " "), "_");
+            //if(uIDresult == "FAIL" || uniqueID.length() == 0 || uniqueID == "0xFFFFFFFF_0xFFFFFF70") continue;
+            //std::cout<<"Linktest mode: "<<uIDresult<<" UniqueID: "<<uniqueID<<" Igloo type: "<<iglooType<<" Major: "<<major<<" Minor: "<<minor<<std::endl;
+	    std::string uniqueID = "uID";
+	    std::string iglooType = "none";
             for(int ch = 0; ch <= chNum; ch++)
             {
                 std::string channel = "Slot_"+sf.first+"_Fib_"+std::to_string(fib)+"_Ch_"+std::to_string(ch);
@@ -180,7 +184,7 @@ int main(int argc, char *argv[])
                 }
                 resultsMap.insert( std::pair<std::string, std::vector<FitResults*>>(channel, results) );
             }
-            delete id;
+            //delete id;
         }
     }
 
