@@ -223,6 +223,7 @@ int main(int argc, char *argv[])
 		//Json per card
                 jsonMap[r->uniqueID][r->uniqueID][r->iglooType][ch.first][plugins[index].plugin][plugins[index].parNames[i].name] = vec;
 		jsonMap[r->uniqueID]["Unique_ID"] = r->uniqueID;
+		jsonMap[r->uniqueID]["RunNum"] = runNum;
             }
             delete r;
         }
@@ -259,4 +260,6 @@ int main(int argc, char *argv[])
         }
     }
     delete c;
+
+    std::cout<<"Finished Run"+runNum<<std::endl;
 }
