@@ -38,9 +38,10 @@ cd /home/hcalpro/hcalraw-scripts/processPluginsHBQIE
 # Moves all data to long term storage on cmshcal11
 ##################################################
 wait
-./MoveFiles.sh
+./MoveFiles.sh $runNum 1 1
 
 ##################################################
 # Upload cards to the data base
 ##################################################
-ssh $REMOTEHOST '/home/django/testing_database_hb/uploader/upload_step2.sh'
+#1 : just QC, 2 : just reg., 3 : both
+ssh $REMOTEHOST '/home/django/testing_database_hb/uploader/upload_step2.sh 3'
