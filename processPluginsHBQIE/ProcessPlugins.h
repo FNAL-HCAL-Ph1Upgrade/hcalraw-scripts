@@ -734,4 +734,63 @@ public:
     }
 };
 
+void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<std::vector<double>>& flags, std::vector<TH1F*>& summaryVec)
+{
+    if(p.plugin == "pedestal")
+    {
+        (*summaryVec[0]).Fill(r->mean);
+        (*summaryVec[1]).Fill(r->sigma);
+        double flag = (p.chi2Min1 < r->mean && r->mean < p.chi2Max1) ? 1 : 0;
+        flags.push_back({r->mean, flag});
+        flag = (p.chi2Min2 < r->sigma && r->sigma < p.chi2Max2) ? 1 : 0;
+        flags.push_back({r->sigma, flag});        
+    }
+    
+    if(r->fit1 != nullptr)
+    {
+        double chi2Fit1 = r->fit1->GetChisquare();
+        (*summaryVec[0]).Fill(chi2Fit1);
+        double flag = (p.chi2Min1 < chi2Fit1 && chi2Fit1 < p.chi2Max1) ? 1 : 0; 
+        flags.push_back({chi2Fit1, flag});
+    
+        for(int pram = 0; pram < p.min1.size(); pram++ )
+        {
+            double val = r->fit1->GetParameter(pram);
+            (*summaryVec[1+pram]).Fill(val);
+            double flag = (p.min1[pram] < val && val < p.max1[pram]) ? 1 : 0; 
+            flags.push_back({val, flag});
+        }
+    }
+    
+    if(r->fit2 != nullptr)
+    {
+        double chi2Fit2 = r->fit2->GetChisquare();
+        (*summaryVec[p.min1.size()+1]).Fill(chi2Fit2);        
+        double flag = (p.chi2Min2 < chi2Fit2 && chi2Fit2 < p.chi2Max2) ? 1 : 0; 
+        flags.push_back({chi2Fit2, flag});
+        
+        for(int pram = 0; pram < p.min2.size(); pram++ )
+        {
+            double val = r->fit2->GetParameter(pram);
+            (*summaryVec[p.min1.size()+2+pram]).Fill(val);        
+            double flag = (p.min2[pram] < val && val < p.max2[pram]) ? 1 : 0; 
+            flags.push_back({val, flag});
+        }       
+    }
+}
+
+std::string split(std::string half, std::string s, std::string h)
+{
+    std::string token;
+    if("first"==half)
+    {
+        token = s.substr(0, s.find(h));
+    }
+    else if ("last"==half)
+    {
+        token = s.substr(s.find(h) + h.length(), std::string::npos);
+    }
+    return token;
+}
+
 #endif
