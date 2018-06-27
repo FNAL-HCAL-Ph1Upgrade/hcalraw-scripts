@@ -10,65 +10,6 @@
 #include <set>
 #include <json/json.h>
 
-void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<std::vector<double>>& flags, std::vector<TH1F*>& summaryVec)
-{
-    if(p.plugin == "pedestal")
-    {
-        (*summaryVec[0]).Fill(r->mean);
-        (*summaryVec[1]).Fill(r->sigma);
-        double flag = (p.chi2Min1 < r->mean && r->mean < p.chi2Max1) ? 1 : 0;
-        flags.push_back({r->mean, flag});
-        flag = (p.chi2Min2 < r->sigma && r->sigma < p.chi2Max2) ? 1 : 0;
-        flags.push_back({r->sigma, flag});        
-    }
-    
-    if(r->fit1 != nullptr)
-    {
-        double chi2Fit1 = r->fit1->GetChisquare();
-        (*summaryVec[0]).Fill(chi2Fit1);
-        double flag = (p.chi2Min1 < chi2Fit1 && chi2Fit1 < p.chi2Max1) ? 1 : 0; 
-        flags.push_back({chi2Fit1, flag});
-    
-        for(int pram = 0; pram < p.min1.size(); pram++ )
-        {
-            double val = r->fit1->GetParameter(pram);
-            (*summaryVec[1+pram]).Fill(val);
-            double flag = (p.min1[pram] < val && val < p.max1[pram]) ? 1 : 0; 
-            flags.push_back({val, flag});
-        }
-    }
-    
-    if(r->fit2 != nullptr)
-    {
-        double chi2Fit2 = r->fit2->GetChisquare();
-        (*summaryVec[p.min1.size()+1]).Fill(chi2Fit2);        
-        double flag = (p.chi2Min2 < chi2Fit2 && chi2Fit2 < p.chi2Max2) ? 1 : 0; 
-        flags.push_back({chi2Fit2, flag});
-        
-        for(int pram = 0; pram < p.min2.size(); pram++ )
-        {
-            double val = r->fit2->GetParameter(pram);
-            (*summaryVec[p.min1.size()+2+pram]).Fill(val);        
-            double flag = (p.min2[pram] < val && val < p.max2[pram]) ? 1 : 0; 
-            flags.push_back({val, flag});
-        }       
-    }
-}
-
-std::string split(std::string half, std::string s, std::string h)
-{
-    std::string token;
-    if("first"==half)
-    {
-        token = s.substr(0, s.find(h));
-    }
-    else if ("last"==half)
-    {
-        token = s.substr(s.find(h) + h.length(), std::string::npos);
-    }
-    return token;
-}
-
 int main(int argc, char *argv[])
 {
     int opt, option_index = 0;
@@ -96,24 +37,24 @@ int main(int argc, char *argv[])
     //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
     //const int chNum = 0;
     const std::vector<PluginPassInfo>& plugins = {
-        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
-        {"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
-        {"pedestalScan",   0.0, 360.0, {2.30, -81.00}, {2.50, -75.00}, {{"chi2Fit1",50,0,10000},{"slope",50,-1,25},{"y-intercept",50,-110,10}}},
-        {"phaseScan",      0.0,  75.0, {20.0, 40.0, 70.0, 89.0, -4.3, -4.3}, {21.0, 45.0, 71.0, 91.0 , -3.8, -3.8}, {{"chi2Fit1",50,0,10000},{"switch1",50,10,33},
+        {"gselScan",       0.0,   3.0, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
+        {"iQiScan",        0.0,   4.5, {0.95,  -0.01}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
+        {"pedestalScan",   0.0, 360.0, {2.30, -81.00}, {2.50, -75.00}, {{"chi2Fit1",50,0,10000000},{"slope",50,-1,25},{"y-intercept",50,-110,10}}},
+        {"phaseScan",      0.0,  75.0, {20.0, 40.0, 70.0, 89.0, -4.3, -4.3}, {21.0, 45.0, 71.0, 91.0 , -3.8, -3.8}, {{"chi2Fit1",50,0,10000000},{"switch1",50,10,33},
                                                                                                                      {"switch2",50,20,55},   {"switch3",50,55,85},
                                                                                                                      {"switch4",50,65,100},  {"timeConst1",50,-8,-1},{"timeConst2",50,-8,-1}}},
-        {"capID0pedestal", 0.0,  25.0, { 1.4,  4.5}, { 1.6,  5.5},
-         0.0,  18.0, {-1.5, 19.0}, {-1.4, 20.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
-                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
-        {"capID1pedestal", 0.0,  30.0, { 1.4,  4.0}, { 1.6,  5.0},
-         0.0,  20.0, {-1.5, 19.0}, {-1.3, 20.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
-                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
-        {"capID2pedestal", 0.0,  32.0, { 1.4,  1.0}, { 1.6,  3.0},
-         0.0,  14.0, {-1.6, 16.0}, {-1.3, 18.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
-                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
-        {"capID3pedestal", 0.0,  34.0, { 1.4,  1.0}, { 1.6,  2.0},
-         0.0,  25.0, {-1.5, 15.0}, {-1.3, 17.0}, {{"chi2Fit1",50,0,10000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
-                                                  {"chi2Fit2",50,0,10000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
+        {"capID0pedestal", 0.0,  35.0, { 1.4,  4.5}, { 1.4,  8.5},
+         0.0,  30.0, {-1.6, 19.0}, {-1.3, 23.0}, {{"chi2Fit1",50,0,10000000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+                                                  {"chi2Fit2",50,0,10000000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
+        {"capID1pedestal", 0.0,  35.0, { 1.4,  4.5}, { 1.4,  8.5},
+         0.0,  20.0, {-1.6, 19.0}, {-1.3, 23.0}, {{"chi2Fit1",50,0,10000000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+                                                  {"chi2Fit2",50,0,10000000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
+        {"capID2pedestal", 0.0,  35.0, { 1.4,  4.5}, { 1.4,  8.5},
+         0.0,  14.0, {-1.6, 19.0}, {-1.3, 23.0}, {{"chi2Fit1",50,0,10000000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+                                                  {"chi2Fit2",50,0,10000000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
+        {"capID3pedestal", 0.0,  35.0, { 1.4,  4.5}, { 1.4,  8.5},
+         0.0,  25.0, {-1.6, 19.0}, {-1.3, 23.0}, {{"chi2Fit1",50,0,10000000}, {"slope1",50,-30,30}, {"y-intercept1",50,-120,100},
+                                                  {"chi2Fit2",50,0,10000000}, {"slope2",50,-30,30}, {"y-intercept2",50,-10,120}}},
         {"pedestal",   0,30, 0,30, {{"mean",50,0,40},{"sigma",50,-2,4}}},
     };
 
@@ -249,17 +190,20 @@ int main(int argc, char *argv[])
     {
         for(auto* s : v)
         {
+            TCanvas* canvas = new TCanvas("canvas","canvas",800,800);
             std::string name = s->GetName();
             s->SetLineColor(kBlack);
             s->Draw();
             const std::string& first  = split("first", name, " ");
             const std::string& last  = split("last", name, " ");
             s->GetXaxis()->SetTitle(last.c_str());;
-            c->Print(("qcTestResults/QC_run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
+            if(name=="chi2Fit1" || name=="chi2Fit2") canvas->SetLogx();
+            canvas->Print(("qcTestResults/QC_run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
             delete s;
+            delete canvas;
         }
     }
     delete c;
 
-    std::cout<<"Finished Run"+runNum<<std::endl;
+    std::cout<<"Finished processing output of Hcalraw plugins Run"+runNum<<std::endl;
 }
