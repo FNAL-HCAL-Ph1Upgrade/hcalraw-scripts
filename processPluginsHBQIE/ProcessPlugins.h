@@ -18,7 +18,7 @@
 #include <math.h>
 
 //Adding a ugly global for the phase scan 
-std::vector<int> whichTS;// = {1,2,3};
+std::vector<int> whichTS;
 
 class RunSummary
 {
@@ -603,7 +603,7 @@ public:
             TH1* t2 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[1])+"_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t2);
             TH1* t3 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[3])+"_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t3);
             p1->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[0])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s1,
+                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[0])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s1,
                     false,
                     0,100,0, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 72,
@@ -614,7 +614,7 @@ public:
                     t1
                 );
             p2->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[1])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s2,
+                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[1])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s2,
                     true,
                     6000,7000,6500, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     55, 90,
@@ -625,7 +625,7 @@ public:
                     t2
                 );
             p3->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[2])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s3,
+                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[2])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s3,
                     true,
                     6000,7000,6500, -100,-3,-5, 0,30,25.5, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 40,
@@ -641,7 +641,7 @@ public:
 
             phaseInfo = new PluginSummary();
             phaseInfo->set({},
-                           r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge Weighted TS", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s1,
+                           r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge Weighted TS", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s1,
                            true,
                            20,23,21, 30,45,33, 65,75,70, 75,90,85, -5.5,-3.5,-4, -5.5,-3.5,-4,
                            0, 114,

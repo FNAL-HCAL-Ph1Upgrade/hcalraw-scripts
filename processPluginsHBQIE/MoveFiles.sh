@@ -11,7 +11,7 @@ UploadDir=/home/django/testing_database_hb/media/uploads
 QCPath=/home/hcalpro/hcalraw-scripts/processPluginsHBQIE/qcTestResults
 
 #Upload file that are already in cards/temp_reg_test: 1 : just QC, 2 : just reg., 3 : both
-ssh $REMOTEHOST '/home/django/testing_database_hb/uploader/upload_step2.sh 3'
+#ssh $REMOTEHOST '/home/django/testing_database_hb/uploader/upload_step2.sh 3'
 
 echo "Moving files to cmshcal11"
 ##################################################
