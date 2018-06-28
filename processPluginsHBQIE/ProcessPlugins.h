@@ -288,6 +288,7 @@ private:
 	}
 	else 
 	{
+  	    leg->AddEntry(graph,"Scan Setting","P");
 	    temp->SetMinimum(p->gymin);
 	    temp->SetMaximum(p->gymax);
 	}
@@ -583,7 +584,7 @@ public:
             p->set({},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
-                   0,20,10, -100,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   0,10,2.4, -100,10,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    33, 65,
                    false,
                    0,0,0, 0,0,0, 0,0,0,
