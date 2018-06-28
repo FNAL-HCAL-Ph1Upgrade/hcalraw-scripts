@@ -1,11 +1,13 @@
 #!/bin/bash
 
-if [ $# -lt 2 ]; then
-    echo "Error: Pass in a run number and number of iterations for register test"
+if [ $# -lt 4 ]; then
+    echo "Error: Pass in a run number, number of iterations for register test, tester's name, and comments"
     exit 1
 else 
     runNum=$1
     n=$2
+    name=$3
+    comments=$4
     echo "The run number is:                          $1"
     echo "Number of iterations for register test is:  $n"
 fi
@@ -32,7 +34,7 @@ cd /home/hcalpro/hcalraw
 ##################################################
 echo "Process run hcalraw"
 cd /home/hcalpro/hcalraw-scripts/processPluginsHBQIE
-./processPlugins -f /home/hcalpro/hcalraw/output/run$runNum-master.root
+./processPlugins -f /home/hcalpro/hcalraw/output/run$runNum-master.root -n "$name" -c "$comments"
 
 ##################################################
 # Moves all data to long term storage on cmshcal11
