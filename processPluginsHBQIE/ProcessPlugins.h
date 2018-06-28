@@ -282,9 +282,16 @@ private:
         //c1.SetLogx();
         //c1.SetLogy();
         TH1* temp = new TH1F("dummy","dummy",10,p->gxmin,p->gxmax);
-        temp->SetMinimum(p->gymin);
-        temp->SetMaximum(p->gymax);
-        temp->SetStats(false);
+	if(graph->InheritsFrom("TH1"))
+	{
+	    temp->GetYaxis()->SetRangeUser(0.0 , graph->GetMaximum()*1.3);
+	}
+	else 
+	{
+	    temp->SetMinimum(p->gymin);
+	    temp->SetMaximum(p->gymax);
+	}
+	temp->SetStats(false);
         temp->SetTitle(0);
         temp->SetLineColor(kBlack);
         temp->GetYaxis()->SetTitle(p->histNameY.c_str());
@@ -298,7 +305,11 @@ private:
         graph->SetLineWidth(3);
         graph->SetMarkerStyle(kFullCircle);
         //graph->SetMarkerStyle(kFullSquare);
-        graph->Draw("same PE");
+	if(graph->InheritsFrom("TH1"))
+	{ 
+	    graph->Draw("same hist");        
+	}
+        else graph->Draw("same PE");
         leg->Draw();
 
         TLatex mark;
@@ -389,8 +400,8 @@ private:
         fitResults->setVar("iglooType", p->iglooType);
         if (p->plugin == "pedestal")
         {
-            fitResults->setVar("mean", p->mean[0]);
-            fitResults->setVar("sigma", p->sigma[0]);
+	    fitResults->setVar("mean", graph->GetMean());
+	    fitResults->setVar("sigma", graph->GetRMS());
         }
             
         delete c1;
@@ -442,6 +453,21 @@ private:
         delete gFit;
     }
 
+    void processPedestal(const PluginSummary* p)
+    {
+        TH1F* hFit = new TH1F("Pedestal","Pedestal",40, 0, 3.1*10);
+        for(auto v : p->mean)
+        {
+    	  hFit->Fill(v);
+        }
+	hFit->SetLineColor(kBlack);
+	hFit->SetStats(true);
+	    
+	fitHisto<TH1>(p, static_cast<TH1*>(hFit));
+    
+        delete hFit;        
+    }
+
     template<typename G> void processMeans(const PluginSummary* p)
     {
         std::vector<double> x, xError, yError;
@@ -480,14 +506,12 @@ private:
     template<typename G> void processPhaseScan(PluginSummary* p, const std::vector<PluginSummary*>& pVec)
     {
         std::vector<double> x, y, xError, yError;
-        //std::vector<double> timeSlice = {1, 2, 3};
         p->setMeanTS(true);
         for(int t = 0; t < pVec[0]->mean.size(); t++)
         {
             double num = 0;
             double den = 0;
             int index = -1;
-            bool bad = false;
             double factor = 1;
             for(auto* p : pVec)
             {
@@ -495,11 +519,6 @@ private:
                 num += whichTS[index]*p->mean[t];
                 den += p->mean[t];
                 //std::cout<<p->tdc[t]<<std::endl;
-            }
-            if((t == 25 || t == 26 || t == 27) && bad)
-            {
-                num = y[t-1];
-                den = 1;
             }
             x.push_back(t); y.push_back(num/den);
             xError.push_back(0.05); yError.push_back(0.01);
@@ -656,14 +675,14 @@ public:
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 1000, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Charge [fC]", "Events", r.runNum, r.channel, r.uniqueID, r.iglooType, 1, verb, s,
                    false,
                    0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    0, 0,
                    false,
                    0,0,0, 0,0,0, 0,0,0,
                    0, 0,
-                   0, 2, 0, 40
+                   0, 35, 0, 50
                 );
             pVec.push_back(p);
         }
@@ -702,7 +721,7 @@ public:
             else if(gType == "Error")
                 processRatios<TGraphErrors>(pVec[0]);
         }
-        else if(r.plugin == "pedestal"       || r.plugin == "pedestalScan"   ||
+        else if(r.plugin == "pedestalScan"   ||
                 r.plugin == "capID0pedestal" || r.plugin == "capID1pedestal" ||
                 r.plugin == "capID2pedestal" || r.plugin == "capID3pedestal")
         {
@@ -711,6 +730,10 @@ public:
             else if(gType == "Error")
                 processMeans<TGraphErrors>(pVec[0]);
         }
+	else if(r.plugin == "pedestal")
+	{
+	    processPedestal(pVec[0]);
+	}
         else if(r.plugin == "phaseScan")
         {
             if(gType == "")
@@ -720,7 +743,7 @@ public:
             }
             else if(gType == "Error")
             {
-                processPhaseScan<TGraphErrors>(pVec);
+	        //processPhaseScan<TGraphErrors>(pVec);
                 processPhaseScan<TGraphErrors>(phaseInfo, pVec);
             }
         }
