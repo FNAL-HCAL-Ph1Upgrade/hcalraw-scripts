@@ -23,13 +23,13 @@ std::vector<int> whichTS;
 class RunSummary
 {
 public:
-    const std::string& plugin;
-    const std::string& file;
-    const std::string& histVar;
-    const std::string& channel;
-    const std::string& runNum;
-    const std::string& uniqueID;
-    const std::string& iglooType;
+    const std::string plugin;
+    const std::string file;
+    const std::string histVar;
+    const std::string channel;
+    const std::string runNum;
+    const std::string uniqueID;
+    const std::string iglooType;
 };
 
 class FitResults
@@ -278,7 +278,6 @@ private:
         leg->SetTextSize(0.03);
         leg->SetBorderSize(0);
         leg->SetFillStyle(0);
-        leg->AddEntry(graph,"Scan Setting","P");
         //c1.SetLogx();
         //c1.SetLogy();
         TH1* temp = new TH1F("dummy","dummy",10,p->gxmin,p->gxmax);
@@ -549,7 +548,7 @@ public:
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({1/3.10, 1/4.65, 1/6.20, 1/9.30, 1/12.40, 1/15.50, 1/18.60, 1/21.70, 1/24.80, 1/27.90, 1/31.00, 1/34.10, 1/35.65},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Measured Gain", "Reference Gain", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Measured Gain", "Reference Gain", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
                    0,2,1, -1,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    0, 1.1,
@@ -566,7 +565,7 @@ public:
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({90, 180, 360, 720, 1440, 2880, 5760, 8640},
                    //{90, 180, 360, 62, 15400, 2880, 5760, 8640}, //test
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Measured: Charge / Max Charge", "Reference: Charge / Max Charge", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
                    0,2,1, -1,1,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    0, 1.1,
@@ -582,7 +581,7 @@ public:
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
                    0,10,2.4, -100,10,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    33, 65,
@@ -600,7 +599,7 @@ public:
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
                    0,20,1, -100,10,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    9, 16,
@@ -623,7 +622,7 @@ public:
             TH1* t2 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[1])+"_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t2);
             TH1* t3 = (TH1*)f->Get( (r.plugin+"_TS_"+std::to_string(whichTS[3])+"_TDC_vs_EvtNum_"+r.channel).c_str() ); tdcVec.push_back(t3);
             p1->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[0])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s1,
+                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[0])+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s1,
                     false,
                     0,100,0, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 72,
@@ -634,7 +633,7 @@ public:
                     t1
                 );
             p2->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[1])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s2,
+                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[1])+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s2,
                     true,
                     6000,7000,6500, -6,-4,-5, 0,100,50, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     55, 90,
@@ -645,7 +644,7 @@ public:
                     t2
                 );
             p3->set({},
-                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[2])+"_"+r.plugin+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s3,
+                    r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[2])+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s3,
                     true,
                     6000,7000,6500, -100,-3,-5, 0,30,25.5, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                     0, 40,
@@ -661,7 +660,7 @@ public:
 
             phaseInfo = new PluginSummary();
             phaseInfo->set({},
-                           r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Setting", "Charge Weighted TS", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s1,
+                           r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge Weighted TS", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s1,
                            true,
                            20,23,21, 30,45,33, 65,75,70, 75,90,85, -5.5,-3.5,-4, -5.5,-3.5,-4,
                            0, 114,
@@ -676,7 +675,7 @@ public:
             PluginSummary* p = new PluginSummary();
             TH1* s = (TH1*)f->Get( (r.histVar+r.channel).c_str() );
             p->set({},
-                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.channel, "Charge [fC]", "Events", r.runNum, r.channel, r.uniqueID, r.iglooType, 1, verb, s,
+                   r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Charge [fC]", "Events", r.runNum, r.channel, r.uniqueID, r.iglooType, 1, verb, s,
                    false,
                    0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    0, 0,

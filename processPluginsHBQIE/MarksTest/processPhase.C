@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     std::vector<int> uHTR2Fibs = {};
     const std::map<std::string, std::vector<int>> SLOTS_FIBERS = { {"1", uHTR1Fibs}, {"2", uHTR2Fibs} };
     const int chNum = 7;
-    whichTS = {4,5,6};
+    whichTS = {1,2,3};
     //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
     //const int chNum = 0;
     const std::vector<PluginPassInfo>& plugins = {

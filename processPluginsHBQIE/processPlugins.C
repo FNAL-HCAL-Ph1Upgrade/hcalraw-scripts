@@ -48,8 +48,8 @@ int main(int argc, char *argv[])
     const std::vector<PluginPassInfo>& plugins = {
         {"gselScan",       0.0,   20.0, {0.95,  -0.05}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
         {"iQiScan",        0.0,   10.0, {0.95,  -0.05}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000000},{"slope",50,-1, 3},{"y-intercept",50,-2,2}}},
-        {"pedestalScan",   0.0,  850.0, {2.30, -85.00}, {2.60, -65.00}, {{"chi2Fit1",50,0,10000000},{"slope",50,-1,25},{"y-intercept",50,-110,10}}},
-        {"phaseScan",      0.0,  600.0, {20.0, 30.0, 70.0, 83.0, -4.6, -4.6}, {23.0, 45.0, 72.0, 91.0 , -3.5, -3.5}, {{"chi2Fit1",50, 0,10000000},{"switch1",   50,10,33},
+        {"pedestalScan",   0.0, 1150.0, {2.30, -85.00}, {2.60, -65.00}, {{"chi2Fit1",50,0,10000000},{"slope",50,-1,25},{"y-intercept",50,-110,10}}},
+        {"phaseScan",      0.0,  600.0, {20.0, 30.0, 70.0, 83.0, -5.2, -5.2}, {23.0, 45.0, 72.0, 91.0 , -3.5, -3.5}, {{"chi2Fit1",50, 0,10000000},{"switch1",   50,10,33},
                                                                                                                       {"switch2", 50,20,55},      {"switch3",   50,55,85},
                                                                                                                       {"switch4", 50,65,100},     {"timeConst1",50,-8,-1},{"timeConst2",50,-8,-1}}},
         {"capID0pedestal", 0.0, 100.0, { 1.3, -4.0}, { 1.8, 10.5},
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 		jsonMap[r->uniqueID]["RunNum"] = runNum;
 		jsonMap[r->uniqueID]["Comments"] = comments;
 		jsonMap[r->uniqueID]["Tester_Name"] = tName;
-		if(int(f[1]) == 0) std::cout<<"f[1]: "<<f[1]<<" "<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f[0]<<std::endl;
+		//if(int(f[1]) == 0) std::cout<<"f[1]: "<<f[1]<<" "<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f[0]<<std::endl;
             }
             delete r;
         }
