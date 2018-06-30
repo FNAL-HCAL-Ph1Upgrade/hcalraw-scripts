@@ -19,8 +19,8 @@ REMOTEHOST=hep@cmshcal11
 ##################################################
 echo "Running the register test"
 cd /home/hcalpro/GITrepos/Common
-python RunRegisterTest.py $n 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 &
-#python RunRegisterTest.py $n 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &
+python RunRegisterTest.py $n 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 "$name" "$comments" &
+#python RunRegisterTest.py $n 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "$name" "$comments" &
 
 ##################################################
 # Processes the output of run control
