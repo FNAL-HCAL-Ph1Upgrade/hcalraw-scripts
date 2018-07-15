@@ -17,7 +17,7 @@
 #include <vector>
 #include <math.h>
 
-//Adding a ugly global for the phase scan 
+//Adding an ugly global for the phase scan 
 std::vector<int> whichTS;
 
 class RunSummary
