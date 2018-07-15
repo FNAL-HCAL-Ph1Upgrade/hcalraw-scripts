@@ -34,6 +34,8 @@ cd /home/hcalpro/hcalraw
 ##################################################
 echo "Process run hcalraw"
 cd /home/hcalpro/hcalraw-scripts/processPluginsHBQIE
+# Setup python3 root6 environment
+source /opt/root6_py3/bin/thisroot.sh
 ./processPlugins -f /home/hcalpro/hcalraw/output/run$runNum-master.root -n "$name" -c "$comments"
 
 ##################################################
