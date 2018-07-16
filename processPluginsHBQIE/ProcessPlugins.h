@@ -468,14 +468,34 @@ private:
         delete hFit;        
     }
 
-    template<typename G> void processMeans(const PluginSummary* p)
+    template<typename G> void processMeans(PluginSummary* p)
     {
         std::vector<double> x, xError, yError;
+        std::vector<std::pair<int, double>> pairVec;
         for(int index = 0; index < p->mean.size(); index++)
         {
             if(p->verb) std::cout<<"Measured: "<<p->mean[index]<<" +/- "<<p->sigma[index]<<std::endl;
-            x.push_back(index + 1);
+            //Adding in bitwise and logic for the signed bit settings
+            int setting;
+            if(p->plugin == "pedestalScan")
+            {
+                setting = ((index & 0x20) ? 1 : -1)*(index & 0x1f);
+                pairVec.push_back( std::make_pair(setting, p->mean[index]) );
+            }
+            else setting = ((index & 0x8) ? 1 : -1)*(index & 0x7); 
+            x.push_back(setting);
             xError.push_back(0.1);
+        }
+
+        std::sort(pairVec.begin(), pairVec.end());
+        bool setMin = true;
+        for(auto& pair : pairVec)
+        {
+            if(pair.second > 2.5 && setMin)
+            {
+                p->fitmin = pair.first;
+                setMin = false;
+            }                
         }
 
         G* gFit = makeTGraph<G>(p, x, xError, p->mean, p->sigma);
@@ -583,12 +603,12 @@ public:
             p->set({},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
-                   0,10,2.4, -100,10,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
-                   33, 65,
+                   0,10,2.4, -100,20,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   0, 31,
                    false,
                    0,0,0, 0,0,0, 0,0,0,
                    0, 0,
-                   0, 66, 0, 100
+                   -40, 40, 0, 100
                 );
             pVec.push_back(p);
         }
@@ -601,12 +621,14 @@ public:
             p->set({},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
-                   0,20,1, -100,10,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
-                   9, 16,
-                   true,
+                   0,10,1.5, -10,100,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   -7, 7,
+                   //0,20,1, -100,10,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   //9, 16,
+                   false,
                    -20,0,-1, -10,100,20, 0,0,0,
                    1, 8,
-                   0, 17, 0, 50
+                   -10, 10, 0, 50
                 );
             pVec.push_back(p);
         }
