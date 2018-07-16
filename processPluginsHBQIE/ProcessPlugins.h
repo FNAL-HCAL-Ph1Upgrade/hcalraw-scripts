@@ -729,7 +729,7 @@ public:
                 rms.push_back( sqrt(m2/n) );
                 tdc.push_back( t/n );
                 if( sqrt(m2/n) - m/n > 0)
-                    sigma.push_back( sqrt( sqrt(m2/n) - m/n) );
+                    sigma.push_back( sqrt( m2/n - (m/n)*(m/n)) );
                 else
                     sigma.push_back(0);
             }
