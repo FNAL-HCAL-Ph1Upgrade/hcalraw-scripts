@@ -529,19 +529,22 @@ private:
         p->setMeanTS(true);
         for(int t = 0; t < pVec[0]->mean.size(); t++)
         {
-            double num = 0;
-            double den = 0;
+	    double num = 0, den = 0, numErrorSquared = 0, denErrorSquared = 0;
             int index = -1;
             double factor = 1;
             for(auto* p : pVec)
             {
-                index++;
+  	        index++;
                 num += whichTS[index]*p->mean[t];
                 den += p->mean[t];
+		numErrorSquared += pow(whichTS[index]*p->sigma[t], 2);
+		denErrorSquared += pow(p->sigma[t], 2);
                 //std::cout<<p->tdc[t]<<std::endl;
             }
-            x.push_back(t); y.push_back(num/den);
-            xError.push_back(0.05); yError.push_back(0.01);
+            x.push_back(t); 
+	    y.push_back(num/den);
+            xError.push_back(0.001); 
+	    yError.push_back((num/den)*sqrt(numErrorSquared/(num*num) + denErrorSquared/(den*den)));
         }
         G* gFit = makeTGraph<G>(p, x, xError, y, yError);
         fitHisto<G>(p, gFit);
