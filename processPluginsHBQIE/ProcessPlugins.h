@@ -625,7 +625,7 @@ public:
             p->set({},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
-                   0,10,1.5, -10,100,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   0,5,1.5, -10,50,30, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    -7, 7,
                    false,
                    -20,0,-1, -10,100,20, 0,0,0,
