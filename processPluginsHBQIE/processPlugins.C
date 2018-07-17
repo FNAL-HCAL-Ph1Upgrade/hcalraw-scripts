@@ -41,10 +41,10 @@ int main(int argc, char *argv[])
     //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
     //const int chNum = 0;
 
-    //-------------------------------------------------------------
+    //--------------------------------------------------------------
     // Change pass fail requirements here
     // {"Name of Scan"} , MinOfCHi2, MaxOfCHi2, {MinOfPram1, MinOfPram2, ...} , {MaxOfPram1, MaxOfPram2, ...}, {{"Name of Pram",BinsOfSummaryPlot,BinMin,BinMax},...}  
-    //------------------------------------------------------------
+    //--------------------------------------------------------------
     const std::vector<PluginPassInfo>& plugins = {
         {"gselScan",       0.0,   25.0, {0.95,  -0.05}, {1.05,   0.01}, {{"chi2Fit1",1000000,0,1000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
         {"iQiScan",        0.0,   20.0, {0.95,  -0.05}, {1.05,   0.01}, {{"chi2Fit1",1000000,0,1000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
