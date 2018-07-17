@@ -27,7 +27,7 @@ fi
 ##################################################
 if [ $moveQC -eq 1 ]; then
     echo "Making directory on cmshcal11"
-    ssh $REMOTEHOST 'cd '$UploadDir'/run_control && mkdir run'${runNum}'_output'
+    ssh $REMOTEHOST 'cd '$UploadDir'/run_control && mkdir -p run'${runNum}'_output'
     
     #Output of run control
     rsync  /home/hcalpro/DATA/FNAL_000$runNum.root $REMOTEHOST:$UploadDir/run_control/run${runNum}_output/.

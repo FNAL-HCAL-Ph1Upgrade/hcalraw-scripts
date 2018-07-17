@@ -41,8 +41,13 @@ source /opt/root6_py3/bin/thisroot.sh
 ##################################################
 # Moves all data to long term storage on cmshcal11
 ##################################################
+
+#Move run control stuff
+./MoveFiles.sh $runNum 0 1
+
+#Move reg. test stuff
 wait
-./MoveFiles.sh $runNum 1 1
+./MoveFiles.sh $runNum 1 0
 
 ##################################################
 # Upload cards to the data base
