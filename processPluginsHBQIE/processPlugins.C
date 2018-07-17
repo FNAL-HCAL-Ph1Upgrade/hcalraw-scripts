@@ -10,6 +10,18 @@
 #include <set>
 #include <json/json.h>
 
+std::string color(const std::string& text, const std::string& color)
+{
+    std::string c;
+    if(color=="red") c = "31";
+    else if(color=="green") c = "32";
+    else if(color=="yellow") c = "33";
+    else if(color=="blue") c = "34";
+    else if(color=="white") c = "37";
+    
+    return "\033[1;"+c+"m"+ text +"\033[0m";
+}
+
 int main(int argc, char *argv[])
 {
     int opt, option_index = 0;
@@ -168,7 +180,11 @@ int main(int argc, char *argv[])
 		jsonMap[r->uniqueID]["RunNum"] = runNum;
 		jsonMap[r->uniqueID]["Comments"] = comments;
 		jsonMap[r->uniqueID]["Tester_Name"] = tName;
-		if(int(f[1]) == 0) std::cout<<r->uniqueID<<" "<<r->iglooType<<" "<<ch.first<<"  f[1]: "<<f[1]<<" "<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f[0]<<std::endl;
+		if(int(f[1]) == 0)
+		{ 
+  		    std::string failInfo = "FAIL: "+r->uniqueID+" "+r->iglooType+" "+ch.first+" "+plugins[index].plugin+" "+plugins[index].parNames[i].name+" "+std::to_string(f[0]);
+		    std::cout<<color(failInfo,"red")<<std::endl;
+		}
             }
             delete r;
         }
@@ -214,5 +230,5 @@ int main(int argc, char *argv[])
     }
     delete c;
 
-    std::cout<<"Finished processing output of Hcalraw plugins Run"+runNum<<std::endl;
+    std::cout<<color("Finished processing output of Hcalraw plugins Run"+runNum,"green")<<std::endl;
 }
