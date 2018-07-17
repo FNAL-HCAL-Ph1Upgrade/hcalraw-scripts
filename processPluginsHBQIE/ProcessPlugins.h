@@ -543,8 +543,9 @@ private:
             }
             x.push_back(t); 
 	    y.push_back(num/den);
-            xError.push_back(0.001); 
-	    yError.push_back((num/den)*sqrt(numErrorSquared/(num*num) + denErrorSquared/(den*den)));
+            xError.push_back(0.05);
+            yError.push_back(0.01);
+	    //yError.push_back((num/den)*sqrt(numErrorSquared/(num*num) + denErrorSquared/(den*den)));
         }
         G* gFit = makeTGraph<G>(p, x, xError, y, yError);
         fitHisto<G>(p, gFit);
@@ -626,12 +627,10 @@ public:
                    true,
                    0,10,1.5, -10,100,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    -7, 7,
-                   //0,20,1, -100,10,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
-                   //9, 16,
                    false,
                    -20,0,-1, -10,100,20, 0,0,0,
                    1, 8,
-                   -10, 10, 0, 50
+                   -10, 10, 0, 70
                 );
             pVec.push_back(p);
         }
@@ -730,11 +729,8 @@ public:
                 //if(verb) std::cout<<n<<std::endl
                 mean.push_back( m/n );
                 rms.push_back( sqrt(m2/n) );
+                sigma.push_back( sqrt( m2/n - (m/n)*(m/n)) );
                 tdc.push_back( t/n );
-                if( sqrt(m2/n) - m/n > 0)
-                    sigma.push_back( sqrt( m2/n - (m/n)*(m/n)) );
-                else
-                    sigma.push_back(0);
             }
             p->setGraphInfo(mean, rms, sigma, tdc);
         }
