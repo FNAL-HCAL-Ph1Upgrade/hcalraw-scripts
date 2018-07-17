@@ -46,14 +46,14 @@ int main(int argc, char *argv[])
     // {"Name of Scan"} , MinOfCHi2, MaxOfCHi2, {MinOfPram1, MinOfPram2, ...} , {MaxOfPram1, MaxOfPram2, ...}, {{"Name of Pram",BinsOfSummaryPlot,BinMin,BinMax},...}  
     //------------------------------------------------------------
     const std::vector<PluginPassInfo>& plugins = {
-        {"gselScan",       0.0,   20.0, {0.95,  -0.05}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
-        {"iQiScan",        0.0,   20.0, {0.95,  -0.05}, {1.05,   0.01}, {{"chi2Fit1",50,0,10000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
-        {"pedestalScan",   0.0,  250.0, {2.20, -10.00}, {2.70,  12.00}, {{"chi2Fit1",50,0,10000000},{"slope",50, -1,25},{"y-intercept",50,-110,10}}},
-        {"capID0pedestal", 0.0,   20.0, {1.30,   0.00}, {1.80,  45.00}, {{"chi2Fit1",50,0,10000000},{"slope",50,-30,30},{"y-intercept",50,-120,100}}},
-        {"capID1pedestal", 0.0,   20.0, {1.30,   0.00}, {1.80,  45.00}, {{"chi2Fit1",50,0,10000000},{"slope",50,-30,30},{"y-intercept",50,-120,100}}},
-        {"capID2pedestal", 0.0,   20.0, {1.30,   0.00}, {1.80,  45.00}, {{"chi2Fit1",50,0,10000000},{"slope",50,-30,30},{"y-intercept",50,-120,100}}},
-        {"capID3pedestal", 0.0,   20.0, {1.30,   0.00}, {1.80,  45.00}, {{"chi2Fit1",50,0,10000000},{"slope",50,-30,30},{"y-intercept",50,-120,100}}},
-        {"phaseScan",      0.0,  600.0, {20.0, 30.0, 70.0, 83.0, -5.2, -5.2}, {23.0, 45.0, 72.0, 91.0 , -3.5, -3.5}, {{"chi2Fit1",50, 0,10000000},{"switch1",   50,10,33},
+        {"gselScan",       0.0,   25.0, {0.95,  -0.05}, {1.05,   0.01}, {{"chi2Fit1",1000000,0,1000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
+        {"iQiScan",        0.0,   20.0, {0.95,  -0.05}, {1.05,   0.01}, {{"chi2Fit1",1000000,0,1000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
+        {"pedestalScan",   0.0,  350.0, {2.20, -10.00}, {2.80,  12.00}, {{"chi2Fit1", 100000,0,1000000},{"slope",50, -1,10},{"y-intercept",100,-50,50}}},
+        {"capID0pedestal", 0.0,   60.0, {1.28,   0.00}, {1.80,  50.00}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100}}},
+        {"capID1pedestal", 0.0,   60.0, {1.28,   0.00}, {1.80,  50.00}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100}}},
+        {"capID2pedestal", 0.0,   60.0, {1.28,   0.00}, {1.80,  50.00}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100}}},
+        {"capID3pedestal", 0.0,   60.0, {1.28,   0.00}, {1.80,  50.00}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100}}},
+        {"phaseScan",      0.0,  600.0, {20.0, 30.0, 70.0, 83.0, -5.2, -5.2}, {23.0, 45.0, 72.0, 91.0 , -3.5, -3.5}, {{"chi2Fit1",1000000, 0,10000000},{"switch1",   50,10,33},
                                                                                                                       {"switch2", 50,20,55},      {"switch3",   50,55,85},
                                                                                                                       {"switch4", 50,65,100},     {"timeConst1",50,-8,-1},{"timeConst2",50,-8,-1}}},
         {"pedestal",       0,30, 0,1, {{"mean",50,0,40},{"sigma",50,-2,4}}},
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 		jsonMap[r->uniqueID]["RunNum"] = runNum;
 		jsonMap[r->uniqueID]["Comments"] = comments;
 		jsonMap[r->uniqueID]["Tester_Name"] = tName;
-		if(int(f[1]) == 0) std::cout<<"f[1]: "<<f[1]<<" "<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f[0]<<std::endl;
+		if(int(f[1]) == 0) std::cout<<r->uniqueID<<" "<<r->iglooType<<" "<<ch.first<<"  f[1]: "<<f[1]<<" "<<plugins[index].plugin<<" "<<plugins[index].parNames[i].name<<" "<<f[0]<<std::endl;
             }
             delete r;
         }
@@ -196,13 +196,18 @@ int main(int argc, char *argv[])
         {
             TCanvas* canvas = new TCanvas("canvas","canvas",800,800);
             std::string name = s->GetName();
-            s->SetLineColor(kBlack);
+            s->SetLineColor(kRed);
+	    s->SetLineWidth(2.0);
             s->Draw();
             const std::string& first  = split("first", name, " ");
             const std::string& last  = split("last", name, " ");
             s->GetXaxis()->SetTitle(last.c_str());;
-            if(name=="chi2Fit1" || name=="chi2Fit2") canvas->SetLogx();
-            canvas->Print(("qcTestResults/QC_run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
+            if(split("last",name," ")=="chi2Fit1" || split("last",name," ")=="chi2Fit2") 
+	    {
+		canvas->SetLogx();
+		canvas->SetLogy();
+	    }
+	    canvas->Print(("qcTestResults/QC_run"+runNum+"/Summary_"+first+"_"+last+".png").c_str());
             delete s;
             delete canvas;
         }
