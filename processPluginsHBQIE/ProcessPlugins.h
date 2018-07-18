@@ -445,6 +445,7 @@ private:
             ratioError.push_back( p->sigma[index] / meanMax );
             knownRatio.push_back( p->known[index] / knownMax );
             knownRatioError.push_back(0.01);
+	    //if(p->plugin == "gselScan") std::cout<<"Measured: "<<p->mean[index] / meanMax<<"  Ref: "<<p->known[index] / knownMax<<std::endl;
         }
         
         G* gFit = makeTGraph<G>(p, ratio, ratioError, knownRatio, knownRatioError);
