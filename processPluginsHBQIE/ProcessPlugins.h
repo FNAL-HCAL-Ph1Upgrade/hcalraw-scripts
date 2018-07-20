@@ -20,18 +20,6 @@
 //Adding an ugly global for the phase scan 
 std::vector<int> whichTS;
 
-class RunSummary
-{
-public:
-    const std::string plugin;
-    const std::string file;
-    const std::string histVar;
-    const std::string channel;
-    const std::string runNum;
-    const std::string uniqueID;
-    const std::string iglooType;
-};
-
 class FitResults
 {
 public:
@@ -116,6 +104,19 @@ public:
           min2(min2_), max2(max2_), parNames(parNames_) {}
 };
 
+class RunSummary
+{
+public:
+    const std::string plugin;
+    const std::string file;
+    const std::string histVar;
+    const std::string channel;
+    const std::string runNum;
+    const std::string uniqueID;
+    const std::string iglooType;
+    const PluginPassInfo* ppi;
+};
+
 class ProcessPlugins
 {
 private:
@@ -142,6 +143,7 @@ private:
         std::vector<double> mean, rms, sigma, tdc;
         bool doMeanTS;
         TH1* TDC;
+        const PluginPassInfo* ppi;
         
         void setGraphInfo(std::vector<double> m, std::vector<double> r, std::vector<double> s, std::vector<double> t)
         {
@@ -160,7 +162,8 @@ private:
                  bool second_,
                  double min12_, double max12_, double set12_, double min22_, double max22_, double set22_, double min32_, double max32_, double set32_, double fitmin2_, double fitmax2_,
                  double gxmin_, double gxmax_, double gymin_, double gymax_,
-                 TH1* TDC_ = nullptr)
+                 TH1* TDC_ = nullptr,
+                 const PluginPassInfo* ppi_ = nullptr)
         {
             known = known_; plugin = plugin_; histName = histName_; histNameX = histNameX_; histNameY = histNameY_; runNum = runNum_; channel = channel_; uniqueID = uniqueID_; iglooType = iglooType_;
             nEvents = nEvents_; verb = verb_; scan = scan_; 
@@ -171,7 +174,7 @@ private:
             second = second_;
             min12 = min12_; max12 = max12_; set12 = set12_; min22 = min22_; max22 = max22_; set22 = set22_; min32 = min32_; max32 = max32_; set32 = set32_; fitmin2 = fitmin2_; fitmax2 = fitmax2_; 
             gxmin = gxmin_; gxmax = gxmax_; gymin = gymin_; gymax = gymax_;
-            TDC = TDC_;
+            TDC = TDC_; ppi = ppi_;
         }
 
         void setMeanTS(bool m) {doMeanTS = m;}
@@ -243,7 +246,7 @@ private:
             );                
     }
 
-    void drawFitInfo(TF1* fit, const std::vector<std::string>& names ,double x, double y)
+    void drawFitInfo(TF1* fit, const std::vector<std::string>& names ,double x, double y, const PluginPassInfo* ppi)
     {
         char chi2[100];
         TLatex mark;
@@ -254,7 +257,7 @@ private:
         std::string fix = "";
         if(fit->GetParameter(1) < 0) fix = " ";
         
-        sprintf(chi2,  "#chi^{2} %18s %.3f"             , "", fit->GetChisquare() );
+        sprintf(chi2,  "#chi^{2} %18s %.3f [%.2lf, %.2lf]"             , "", fit->GetChisquare(), ppi->chi2Min1, ppi->chi2Max1 );
         mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y ), chi2);
         
         int index = -1;
@@ -262,7 +265,7 @@ private:
         {
             index++;
             char ch[50];
-            sprintf(ch, "%-18s %.3f #pm %.3f"    ,name.c_str(), fit->GetParameter(index), fit->GetParError(index));
+            sprintf(ch, "%-18s %.3f #pm %.3f [%.2lf, %.2lf]"    ,name.c_str(), fit->GetParameter(index), fit->GetParError(index), ppi->min1[index], ppi->max1[index]);
             mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.03*(index+1) ), ch);
         }
     }
@@ -360,7 +363,7 @@ private:
             graph->Fit(fit1, "RQ", "", p->fitmin, p->fitmax);
             fit1->Draw("same");
             leg->AddEntry(fit1,"Fit","l");
-            drawFitInfo(fit1, names, 0.1, 0.13);
+            drawFitInfo(fit1, names, 0.05, 0.13, p->ppi);
             if(p->verb) printFitInfo(fit1);
         }
         
@@ -385,7 +388,7 @@ private:
             graph->Fit(fit2, "RQ", "", p->fitmin2, p->fitmax2);
             fit2->Draw("same");
             leg->AddEntry(fit2,"Fit","l");
-            drawFitInfo(fit2, names, 0.1, 0.25);
+            drawFitInfo(fit2, names, 0.05, 0.25, p->ppi);
             if(p->verb) printFitInfo(fit2);
         }
 
@@ -581,7 +584,8 @@ public:
                    false,
                    0,0,0, 0,0,0, 0,0,0,
                    0, 0,
-                   0, 1.01, 0.00000001, 1.01
+                   0, 1.01, 0.00000001, 1.01,
+                   nullptr, r.ppi
                 );
             pVec.push_back(p);
         }
@@ -598,7 +602,8 @@ public:
                    false,
                    0,0,0, 0,0,0, 0,0,0,
                    0, 0,
-                   0, 1.01, 0.00000001, 1.01
+                   0, 1.01, 0.00000001, 1.01,
+                   nullptr, r.ppi
                 );
             pVec.push_back(p);
         }
@@ -614,7 +619,8 @@ public:
                    false,
                    0,0,0, 0,0,0, 0,0,0,
                    0, 0,
-                   -40, 40, 0, 100
+                   -40, 40, 0, 100,
+                   nullptr, r.ppi
                 );
             pVec.push_back(p);
         }
@@ -632,7 +638,8 @@ public:
                    false,
                    -20,0,-1, -10,100,20, 0,0,0,
                    1, 8,
-                   -10, 10, 0, 70
+                   -10, 10, 0, 70,
+                   nullptr, r.ppi
                 );
             pVec.push_back(p);
         }
@@ -656,7 +663,7 @@ public:
                     6000,7000,6500, -6,-4,-5, 0,100,50,
                     72, 110,
                     0, 100, 0, 12000,
-                    t1
+                    t1, r.ppi
                 );
             p2->set({},
                     r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[1])+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s2,
@@ -667,7 +674,7 @@ public:
                     6000,7000,6500, -6,-4,-5, 0,100,50,
                     22, 55,
                     0, 100, 0, 12000,
-                    t2
+                    t2, r.ppi
                 );
             p3->set({},
                     r.plugin, "Run"+r.runNum+"_TS_"+std::to_string(whichTS[2])+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 50, verb, s3,
@@ -678,7 +685,7 @@ public:
                     0,0,0, 0,0,0, 0,0,0,
                     0, 0,
                     0, 100, 0, 12000,
-                    t3
+                    t3, r.ppi
                 );
             pVec.push_back(p1);
             pVec.push_back(p2);
@@ -693,7 +700,8 @@ public:
                            false,
                            0,0,0, 0,0,0, 0,0,0,
                            0, 0,
-                           0, 100, whichTS[2]-3, whichTS[2]+2.5
+                           0, 100, whichTS[2]-3, whichTS[2]+2.5,
+                           nullptr, r.ppi
                 );
         }
         else if(r.plugin == "pedestal")
@@ -708,7 +716,8 @@ public:
                    false,
                    0,0,0, 0,0,0, 0,0,0,
                    0, 0,
-                   0, 35, 0, 50
+                   0, 35, 0, 50,
+                   nullptr, r.ppi
                 );
             pVec.push_back(p);
         }

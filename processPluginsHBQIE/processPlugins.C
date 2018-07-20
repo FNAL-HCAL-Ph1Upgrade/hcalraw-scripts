@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 23} };
     const int chNum = 7;
     whichTS = {1,2,3};
-    //const std::map<std::string, int> SLOTS_FIBERS = { {"2" , 0} };
+    //const std::map<std::string, int> SLOTS_FIBERS = { {"1" , 7} };
     //const int chNum = 0;
 
     //--------------------------------------------------------------
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
                     if(info.plugin == "phaseScan") firstPart = "_Charge_vs_EvtNum_";
     
                     //std::cout << firstPart + channel << std::endl;
-                    RunSummary rs = {info.plugin, runFile, firstPart, channel, runNum, uniqueID, iglooType};
+                    RunSummary rs = {info.plugin, runFile, firstPart, channel, runNum, uniqueID, iglooType, &info};
                     uniqueIDs.insert(uniqueID);
                     ProcessPlugins p;
                     //p.processPlugins(r, "", false);
