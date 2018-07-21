@@ -739,14 +739,15 @@ public:
 
         for(auto* p : pVec)
         {
-            std::vector<double> mean, rms, sigma, tdc;
+            std::vector<double> mean, rms, sigma, error, tdc;
             for(int index = 0; index < p->scan->GetNbinsX()/p->nEvents; index++)
             {
-                double m = 0, m2 = 0; int n = 0, t = 0;
+                double m = 0, m2 = 0, me2 = 0; int n = 0, t = 0;
                 for(int bin = 1 + p->nEvents*index; bin <= (p->nEvents) + p->nEvents*index; bin++)
                 {
                     double c = p->scan->GetBinContent(bin);
-                    m += c; m2 += c*c; n++;
+                    double cE = p->scan->GetBinError(bin);
+                    m += c; m2 += c*c; me2 += cE*cE; n++;
                     if(p->TDC  != nullptr) t += p->TDC->GetBinContent(bin);
                     //if(verb) std::cout<<index<<"  "<<bin<<"  "<<p->scan->GetBinContent(bin)<<std::endl;
                 }
@@ -754,9 +755,11 @@ public:
                 mean.push_back( m/n );
                 rms.push_back( sqrt(m2/n) );
                 sigma.push_back( sqrt( m2/n - (m/n)*(m/n)) );
+                error.push_back( sqrt(me2/n) );
                 tdc.push_back( t/n );
             }
-            p->setGraphInfo(mean, rms, sigma, tdc);
+            if(r.plugin == "pedestalScan") p->setGraphInfo(mean, rms, error, tdc);
+            else p->setGraphInfo(mean, rms, sigma, tdc);
         }
         
         if(r.plugin == "gselScan" || r.plugin == "iQiScan")
