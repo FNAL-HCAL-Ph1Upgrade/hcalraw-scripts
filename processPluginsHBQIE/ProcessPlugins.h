@@ -246,27 +246,36 @@ private:
             );                
     }
 
-    void drawFitInfo(TF1* fit, const std::vector<std::string>& names ,double x, double y, const PluginPassInfo* ppi)
+    void drawFitInfo(TF1* fit, std::vector<double>* v, const std::vector<std::string>& names ,double x, double y, const PluginPassInfo* ppi)
     {
-        char chi2[100];
+        char st[100];
         TLatex mark;
         mark.SetNDC(true);
         mark.SetTextAlign(11);
         mark.SetTextSize(0.030);
         
         std::string fix = "";
-        if(fit->GetParameter(1) < 0) fix = " ";
-        
-        sprintf(chi2,  "#chi^{2} %18s %.3f [%.2lf, %.2lf]"             , "", fit->GetChisquare(), ppi->chi2Min1, ppi->chi2Max1 );
-        mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y ), chi2);
-        
-        int index = -1;
-        for(const auto& name : names)
+        if(v==nullptr)
         {
-            index++;
-            char ch[50];
-            sprintf(ch, "%-18s %.3f #pm %.3f [%.2lf, %.2lf]"    ,name.c_str(), fit->GetParameter(index), fit->GetParError(index), ppi->min1[index], ppi->max1[index]);
-            mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.03*(index+1) ), ch);
+            if(fit->GetParameter(1) < 0) fix = " ";            
+            sprintf(st,  "#chi^{2} %16s %.3f [%.2lf, %.2lf]"             , "", fit->GetChisquare(), ppi->chi2Min1, ppi->chi2Max1 );
+            mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y ), st);
+            
+            int index = -1;
+            for(const auto& name : names)
+            {
+                index++;
+                char ch[50];
+                sprintf(ch, "%-16s %.3f #pm %.3f [%.2lf, %.2lf]"    ,name.c_str(), fit->GetParameter(index), fit->GetParError(index), ppi->min1[index], ppi->max1[index]);
+                mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.03*(index+1) ), ch);
+            }
+        }
+        else if(fit==nullptr)
+        {
+            sprintf(st, "%-10s %.3f [%.2lf, %.2lf]"    ,names[0].c_str(), (*v)[0], ppi->chi2Min1, ppi->chi2Max1);
+            mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y ), st);
+            sprintf(st, "%-10s %.3f [%.2lf, %.2lf]"    ,names[1].c_str(), (*v)[1], ppi->chi2Min2, ppi->chi2Max2);
+            mark.DrawLatex( gPad->GetLeftMargin() + x, 1 - (gPad->GetTopMargin() + y + 0.03 ), st);
         }
     }
     
@@ -286,7 +295,7 @@ private:
         TH1* temp = new TH1F("dummy","dummy",10,p->gxmin,p->gxmax);
 	if(graph->InheritsFrom("TH1"))
 	{
-	    temp->GetYaxis()->SetRangeUser(0.0 , graph->GetMaximum()*1.3);
+	    temp->GetYaxis()->SetRangeUser(0.1 , graph->GetMaximum()*10);
 	}
 	else 
 	{
@@ -363,7 +372,7 @@ private:
             graph->Fit(fit1, "RQ", "", p->fitmin, p->fitmax);
             fit1->Draw("same");
             leg->AddEntry(fit1,"Fit","l");
-            drawFitInfo(fit1, names, 0.05, 0.13, p->ppi);
+            drawFitInfo(fit1, nullptr, names, 0.05, 0.13, p->ppi);
             if(p->verb) printFitInfo(fit1);
         }
         
@@ -388,13 +397,9 @@ private:
             graph->Fit(fit2, "RQ", "", p->fitmin2, p->fitmax2);
             fit2->Draw("same");
             leg->AddEntry(fit2,"Fit","l");
-            drawFitInfo(fit2, names, 0.05, 0.25, p->ppi);
+            drawFitInfo(fit2, nullptr, names, 0.05, 0.25, p->ppi);
             if(p->verb) printFitInfo(fit2);
         }
-
-        std::string path = "qcTestResults/QC_run"+p->runNum+"/"+p->uniqueID+"/"+p->plugin+"/";
-        gSystem->Exec( ("mkdir -p "+path).c_str() );
-        c1->Print((path+p->histName+".png").c_str());
 
         fitResults = new FitResults();
         fitResults->setVar("fit1", fit1);
@@ -405,7 +410,15 @@ private:
         {
 	    fitResults->setVar("mean", graph->GetMean());
 	    fitResults->setVar("sigma", graph->GetRMS());
+            names = {"mean", "sigma"};
+            auto* v = new std::vector<double>({graph->GetMean(),graph->GetRMS()});
+            drawFitInfo(nullptr, v, names, 0.35, 0.05, p->ppi);
+            c1->SetLogy();
         }
+        
+        std::string path = "qcTestResults/QC_run"+p->runNum+"/"+p->uniqueID+"/"+p->plugin+"/";
+        gSystem->Exec( ("mkdir -p "+path).c_str() );
+        c1->Print((path+p->histName+".png").c_str());
             
         delete c1;
         delete leg;
