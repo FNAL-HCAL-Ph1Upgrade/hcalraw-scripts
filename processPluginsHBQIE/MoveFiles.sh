@@ -19,6 +19,7 @@ echo "Moving files to cmshcal11"
 ##################################################
 if [ $moveReg -eq 1 ]; then
     rsync -r /home/hcalpro/GITrepos/Common/registerTestResults/* $REMOTEHOST:$UploadDir/temp_reg_test/.
+    rsync -r /home/hcalpro/GITrepos/Common/registerTestResults/* /home/hcalpro/DATA/RegTestResults/.
     rm -rf /home/hcalpro/GITrepos/Common/registerTestResults/0x*
 fi
 
