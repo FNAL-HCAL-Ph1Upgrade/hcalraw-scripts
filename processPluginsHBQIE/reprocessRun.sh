@@ -1,15 +1,10 @@
 #!/bin/bash
 
-if [ $# -lt 3 ]; then
-    echo "Error: Pass in a run number list, tester's name, and comments"
-    exit 1
-else 
-    runNum=$1
-    name=$2
-    comments=$3
-    #echo "The run number is:                          $1"
-    #echo "Number of iterations for register test is:  $n"
-fi
+runNum=$1
+name="hcaldaq"
+comments="Reprocessed this run with reprocessRun.sh"
+echo "The run number is:                          $1"
+echo "Number of iterations for register test is:  $n"
 
 REMOTEHOST=hep@cmshcal11
 
