@@ -514,11 +514,7 @@ private:
 	        p->fitmin = pair.first;
 		setMin = false;
 	    }                
-	    if(!(index == -1 && p->isIncreasing))
-	      {
-	      p->isIncreasing = (pairVec[index].second <= pair.second) ? true : false;
-		std::cout<<p->plugin<<"  "<<p->isIncreasing<<"  "<<pairVec[index].second<<"  "<<pair.second<<std::endl;
-	    }
+	    if(!(index == -1 && p->isIncreasing)) p->isIncreasing = (pairVec[index].second <= pair.second) ? true : false;
 	    index++;
 	}
 
@@ -563,7 +559,6 @@ private:
                 den += p->mean[t];
 		numErrorSquared += pow(whichTS[index]*p->sigma[t], 2);
 		denErrorSquared += pow(p->sigma[t], 2);
-                //std::cout<<p->tdc[t]<<std::endl;
             }
             x.push_back(t); 
 	    y.push_back(num/den);
@@ -834,13 +829,11 @@ void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<std::vec
         for(int pram = 0; pram < p.min1.size(); pram++ )
         {
             double val = r->fit1->GetParameter(pram);
+	    if(pram == p.min1.size() - 1 && (p.plugin == "pedestalScan" || p.plugin == "capID0pedestal" || p.plugin == "capID1pedestal" || p.plugin == "capID2pedestal" || p.plugin == "capID3pedestal")) val = static_cast<double>(r->isIncreasing);
             (*summaryVec[1+pram]).Fill(val);
-            double flag = (p.min1[pram] < val && val < p.max1[pram]) ? 1 : 0; 
+            double flag = (p.min1[pram] <= val && val <= p.max1[pram]) ? 1 : 0; 
             flags.push_back({val, flag});
         }
-
-	double isIncreasing = static_cast<double>(r->isIncreasing);
-	flags.push_back({isIncreasing, isIncreasing});
     }
     
     if(r->fit2 != nullptr)
