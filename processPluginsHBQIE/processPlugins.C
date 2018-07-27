@@ -47,28 +47,28 @@ int main(int argc, char *argv[])
     // -------------------------------------------------
     
     const std::string& runNum  = split("last",  split("first",runFile,"-") ,"run").c_str();
-    const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 23} };
-    const int chNum = 7;
+    //const std::map<std::string, int> SLOTS_FIBERS = { {"1", 23}, {"2", 23} };
+    //const int chNum = 7;
     whichTS = {1,2,3};
-    //const std::map<std::string, int> SLOTS_FIBERS = { {"1" , 7} };
-    //const int chNum = 0;
+    const std::map<std::string, int> SLOTS_FIBERS = { {"1" , 7} };
+    const int chNum = 0;
 
     //--------------------------------------------------------------
     // Change pass fail requirements here
     // {"Name of Scan"} , MinOfCHi2, MaxOfCHi2, {MinOfPram1, MinOfPram2, ...} , {MaxOfPram1, MaxOfPram2, ...}, {{"Name of Pram",BinsOfSummaryPlot,BinMin,BinMax},...}  
     //--------------------------------------------------------------
     const std::vector<PluginPassInfo>& plugins = {
-        {"gselScan",       0.0,   10.0, {0.90,  -0.05}, {1.10,   0.01}, {{"chi2Fit1",1000000,0,1000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
-        {"iQiScan",        0.0,   10.0, {0.90,  -0.05}, {1.10,   0.01}, {{"chi2Fit1",1000000,0,1000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
-        {"pedestalScan",   0.0,  100.0, {2.20, -10.00}, {2.80,  16.00}, {{"chi2Fit1", 100000,0,1000000},{"slope",50, -1,10},{"y-intercept",100,-50,50}}},
-        {"capID0pedestal", 0.0,   25.0, {1.28,   0.00}, {1.80,  50.00}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100}}},
-        {"capID1pedestal", 0.0,   25.0, {1.28,   0.00}, {1.80,  50.00}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100}}},
-        {"capID2pedestal", 0.0,   25.0, {1.28,   0.00}, {1.80,  50.00}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100}}},
-        {"capID3pedestal", 0.0,   25.0, {1.28,   0.00}, {1.80,  50.00}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100}}},
-        {"phaseScan",      0.0,  600.0, {20.0, 30.0, 69.5, 81.0, -5.3, -5.3}, {23.0, 45.0, 73.0, 91.0 , -3.5, -3.5}, {{"chi2Fit1",1000000, 0,10000000},{"switch1",   50,10,33},
-                                                                                                                      {"switch2", 50,20,55},      {"switch3",   50,55,85},
-                                                                                                                      {"switch4", 50,65,100},     {"timeConst1",50,-8,-1},{"timeConst2",50,-8,-1}}},
-        {"pedestal",       5,30, 0.05,1, {{"mean",50,0,40},{"sigma",50,-2,4}}},
+        //{"gselScan",       0.0,   10.0, {0.90,  -0.05}, {1.10,   0.01}, {{"chi2Fit1",1000000,0,1000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
+        //{"iQiScan",        0.0,   10.0, {0.90,  -0.05}, {1.10,   0.01}, {{"chi2Fit1",1000000,0,1000000},{"slope",50, -1, 3},{"y-intercept",50,-2,2}}},
+        {"pedestalScan",   0.0,  100.0, {2.20, -10.00, 1}, {2.80,  16.00, 1}, {{"chi2Fit1", 100000,0,1000000},{"slope",50, -1,10},{"y-intercept",100,-50,50},{"isIncreasing",2,-0.5,1.5}}},
+        {"capID0pedestal", 0.0,   25.0, {1.28,   0.00, 1}, {1.80,  50.00, 1}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100},{"isIncreasing",2,-0.5,1.5}}},
+        {"capID1pedestal", 0.0,   25.0, {1.28,   0.00, 1}, {1.80,  50.00, 1}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100},{"isIncreasing",2,-0.5,1.5}}},
+        {"capID2pedestal", 0.0,   25.0, {1.28,   0.00, 1}, {1.80,  50.00, 1}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100},{"isIncreasing",2,-0.5,1.5}}},
+        {"capID3pedestal", 0.0,   25.0, {1.28,   0.00, 1}, {1.80,  50.00, 1}, {{"chi2Fit1",1000000,0,1000000},{"slope",50,-30,30},{"y-intercept",50,-20,100},{"isIncreasing",2,-0.5,1.5}}},
+        //{"phaseScan",      0.0,  600.0, {20.0, 30.0, 69.5, 81.0, -5.3, -5.3}, {23.0, 45.0, 73.0, 91.0 , -3.5, -3.5}, {{"chi2Fit1",1000000, 0,10000000},{"switch1",   50,10,33},
+        //                                                                                                              {"switch2", 50,20,55},      {"switch3",   50,55,85},
+        //                                                                                                              {"switch4", 50,65,100},     {"timeConst1",50,-8,-1},{"timeConst2",50,-8,-1}}},
+        //{"pedestal",       5,30, 0.05,1, {{"mean",50,0,40},{"sigma",50,-2,4}}},
     };
 
     std::vector<std::vector<TH1F*>> summaryPlots;
