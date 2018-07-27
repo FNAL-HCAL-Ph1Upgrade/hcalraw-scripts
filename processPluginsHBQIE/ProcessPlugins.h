@@ -29,7 +29,8 @@ public:
     double sigma;
     std::string uniqueID;
     std::string iglooType;
-    
+    bool isIncreasing;    
+
     void setVar(const std::string& name, TF1* var)
     {
         if(name == "fit1") fit1 = var;
@@ -48,7 +49,7 @@ public:
         else if(name == "iglooType") iglooType = var;
     }
     
-    FitResults() : fit1(nullptr), fit2(nullptr), mean(0), sigma(0), uniqueID("")
+    FitResults() : fit1(nullptr), fit2(nullptr), mean(0), sigma(0), uniqueID(""), isIncreasing(true)
     {
     }
 
@@ -77,7 +78,7 @@ public:
     
     double chi2Min2, chi2Max2;
     std::vector<double> min2, max2;
-    
+
     PluginPassInfo(std::string plugin_,
                    double chi2Min1_, double chi2Max1_,
                    std::vector<double> min1_, std::vector<double> max1_, std::vector<SummaryPlotInfo> parNames_)
@@ -144,7 +145,8 @@ private:
         bool doMeanTS;
         TH1* TDC;
         const PluginPassInfo* ppi;
-        
+	bool isIncreasing;        
+
         void setGraphInfo(std::vector<double> m, std::vector<double> r, std::vector<double> s, std::vector<double> t)
         {
             mean  = m;
@@ -179,7 +181,7 @@ private:
 
         void setMeanTS(bool m) {doMeanTS = m;}
         
-        PluginSummary() : scan(nullptr), doMeanTS(false), TDC(nullptr)
+        PluginSummary() : scan(nullptr), doMeanTS(false), TDC(nullptr), isIncreasing(true)
         {
         }
         ~PluginSummary()
@@ -415,7 +417,8 @@ private:
             drawFitInfo(nullptr, v, names, 0.35, 0.05, p->ppi);
             c1->SetLogy();
         }
-        
+   
+	fitResults->isIncreasing = p->isIncreasing;
         std::string path = "qcTestResults/QC_run"+p->runNum+"/"+p->uniqueID+"/"+p->plugin+"/";
         gSystem->Exec( ("mkdir -p "+path).c_str() );
         c1->Print((path+p->histName+".png").c_str());
@@ -494,26 +497,26 @@ private:
             if(p->verb) std::cout<<"Measured: "<<p->mean[index]<<" +/- "<<p->sigma[index]<<std::endl;
             //Adding in bitwise and logic for the signed bit settings
             int setting;
-            if(p->plugin == "pedestalScan")
-            {
-                setting = ((index & 0x20) ? 1 : -1)*(index & 0x1f);
-                pairVec.push_back( std::make_pair(setting, p->mean[index]) );
-            }
+            if(p->plugin == "pedestalScan") setting = ((index & 0x20) ? 1 : -1)*(index & 0x1f);
             else setting = ((index & 0x8) ? 1 : -1)*(index & 0x7); 
+	    pairVec.push_back( std::make_pair(setting, p->mean[index]) );
             x.push_back(setting);
             xError.push_back(0.1);
         }
 
-        std::sort(pairVec.begin(), pairVec.end());
-        bool setMin = true;
-        for(auto& pair : pairVec)
-        {
-            if(pair.second > 2.5 && setMin)
-            {
-                p->fitmin = pair.first;
-                setMin = false;
-            }                
-        }
+	std::sort(pairVec.begin(), pairVec.end());
+	bool setMin = true;
+	int index = -1;
+	for(auto& pair : pairVec)
+	{
+	    if(pair.second > 2.5 && setMin)
+	    {
+	        p->fitmin = pair.first;
+		setMin = false;
+	    }                
+	    if(!(index == -1 && p->isIncreasing)) p->isIncreasing = (pairVec[index].second <= pair.second) ? true : false;
+	    index++;
+	}
 
         G* gFit = makeTGraph<G>(p, x, xError, p->mean, p->sigma);
         fitHisto<G>(p, gFit);
@@ -556,7 +559,6 @@ private:
                 den += p->mean[t];
 		numErrorSquared += pow(whichTS[index]*p->sigma[t], 2);
 		denErrorSquared += pow(p->sigma[t], 2);
-                //std::cout<<p->tdc[t]<<std::endl;
             }
             x.push_back(t); 
 	    y.push_back(num/den);
@@ -646,7 +648,7 @@ public:
             p->set({},
                    r.plugin, "Run"+r.runNum+"_"+r.plugin+"_"+r.iglooType+"_"+r.channel, "Setting", "Charge [fC]", r.runNum, r.channel, r.uniqueID, r.iglooType, 100, verb, s,
                    true,
-                   0,5,1.5, -10,50,30, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
+                   1,3,1.5, 0,50,30, 0,0,0, 0,0,0, 0,0,0, 0,0,0, //0,0,0, 0,0,0,
                    -7, 7,
                    false,
                    -20,0,-1, -10,100,20, 0,0,0,
@@ -827,8 +829,9 @@ void checkFit(const FitResults* r, const PluginPassInfo& p, std::vector<std::vec
         for(int pram = 0; pram < p.min1.size(); pram++ )
         {
             double val = r->fit1->GetParameter(pram);
+	    if(pram == p.min1.size() - 1 && (p.plugin == "pedestalScan" || p.plugin == "capID0pedestal" || p.plugin == "capID1pedestal" || p.plugin == "capID2pedestal" || p.plugin == "capID3pedestal")) val = static_cast<double>(r->isIncreasing);
             (*summaryVec[1+pram]).Fill(val);
-            double flag = (p.min1[pram] < val && val < p.max1[pram]) ? 1 : 0; 
+            double flag = (p.min1[pram] <= val && val <= p.max1[pram]) ? 1 : 0; 
             flags.push_back({val, flag});
         }
     }
