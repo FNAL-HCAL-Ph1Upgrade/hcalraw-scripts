@@ -371,7 +371,7 @@ private:
             fit1->SetParameter(1, p->set2);
             fit1->SetLineWidth(2);
             fit1->SetLineColor(kRed);
-            graph->Fit(fit1, "RQ", "", p->fitmin, p->fitmax);
+            graph->Fit(fit1, "RQM", "", p->fitmin, p->fitmax);
             fit1->Draw("same");
             leg->AddEntry(fit1,"Fit","l");
             drawFitInfo(fit1, nullptr, names, 0.05, 0.13, p->ppi);
@@ -396,7 +396,7 @@ private:
             fit2->SetParameter(1, p->set22);
             fit2->SetLineWidth(2);
             fit2->SetLineColor(kBlue);
-            graph->Fit(fit2, "RQ", "", p->fitmin2, p->fitmax2);
+            graph->Fit(fit2, "RQM", "", p->fitmin2, p->fitmax2);
             fit2->Draw("same");
             leg->AddEntry(fit2,"Fit","l");
             drawFitInfo(fit2, nullptr, names, 0.05, 0.25, p->ppi);
