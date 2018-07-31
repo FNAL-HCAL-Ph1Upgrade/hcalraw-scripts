@@ -8,8 +8,6 @@ import code
 
 def main():
     # Choose options from the list or add your own
-    #options = ["type","run","Slot","Fib","Channel"]    
-    #types = ["UniqueID","pedestal","capIDpedestal","pedestalScan","iqiScan","gselScan","phaseScan"]    
     ranges = {"UniqueID":[1,100],
              "pedestal":[101,1100],
              "capIDpedestal":[1101,2700],
@@ -19,8 +17,11 @@ def main():
              "phaseScan":[11201, 21200],
              "all":[1, 21200]
              }
+    types = list(key for key in ranges)
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--type", "-t", default="all", help="run type for selecting events")
+    parser.add_argument("--eventmin", "-emin", default="", help="minevt for selecting events")
+    parser.add_argument("--eventmax", "-emax", default="", help="maxevt type for selecting events")
     parser.add_argument("--run", "-r", default="")
     parser.add_argument("--slot", "-s", default="")
     parser.add_argument("--fiber", "-f", default="")
@@ -29,6 +30,8 @@ def main():
     
     options = parser.parse_args()
     run_type = options.type
+    emin = options.eventmin
+    emax = options.eventmax
     run = options.run
     slot = options.slot
     fiber = options.fiber
@@ -39,7 +42,7 @@ def main():
         sys.exit("types: {0}".format(" ".join(types)))
 
     if run_type not in ranges:
-        print "Run Type not Recognized.."
+        print "Run type not recognized...."
         exit()
     
     try:
@@ -47,6 +50,10 @@ def main():
     except:
         print "Error: Incorrect Run Type"
         exit()
+
+    if emin and emax:
+        points = [int(emin),int(emax)]
+        run_type = "eventmin {0}, eventmax {1}".format(emin,emax)
 
     f = ROOT.TFile.Open("/home/hcalpro/hcalraw/output/run{0}-master.root".format(run))
     if not f: 
