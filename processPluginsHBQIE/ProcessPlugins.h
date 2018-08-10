@@ -494,7 +494,8 @@ private:
         std::vector<std::pair<int, double>> pairVec;
         for(int index = 0; index < p->mean.size(); index++)
         {
-            if(p->verb) std::cout<<"Measured: "<<p->mean[index]<<" +/- "<<p->sigma[index]<<std::endl;
+            if(p->verb) std::cout<<"Measured: "<<index<<" "<<p->mean[index]<<" +/- "<<p->sigma[index]<<std::endl;
+	    //std::cout<<"Measured: "<<index<<" "<<p->mean[index]<<" +/- "<<p->sigma[index]<<std::endl;
             //Adding in bitwise and logic for the signed bit settings
             int setting;
             if(p->plugin == "pedestalScan") setting = ((index & 0x20) ? 1 : -1)*(index & 0x1f);
@@ -507,14 +508,18 @@ private:
 	std::sort(pairVec.begin(), pairVec.end());
 	bool setMin = true;
 	int index = -1;
+	//Hard coded place to start fit: bad
+	double minVal = 2.5;
 	for(auto& pair : pairVec)
 	{
-	    if(pair.second > 2.5 && setMin)
+	    if(pair.second > minVal && setMin)
 	    {
 	        p->fitmin = pair.first;
 		setMin = false;
-	    }                
+	    }
 	    if(!(index == -1) && p->isIncreasing) p->isIncreasing = (pairVec[index].second <= pair.second) ? true : false;
+	    //std::cout<<"Setting: "<<pair.first<<" "<<p->plugin<<" "<<p->isIncreasing<<" "<<pairVec[index].second<<" "<<pair.second<<std::endl;
+	    //std::cout<<"Setting: "<<pair.first<<" "<<p->plugin<<" "<<p->isIncreasing<<" "<<pairVec[index].second<<" "<<pair.second<<std::endl;
 	    index++;
 	}
 
@@ -756,7 +761,9 @@ public:
                 //if(verb) std::cout<<n<<std::endl
                 mean.push_back( m/n );
                 rms.push_back( sqrt(m2/n) );
-                sigma.push_back( sqrt( m2/n - (m/n)*(m/n)) );
+		double s = sqrt( m2/n - (m/n)*(m/n));
+		//if(s < 0.001) s = 0.1; 
+                sigma.push_back(s);		
                 error.push_back( sqrt(me2/n) );
                 tdc.push_back( t/n );
             }
