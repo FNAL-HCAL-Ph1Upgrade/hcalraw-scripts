@@ -576,6 +576,26 @@ private:
 
         delete gFit;
     }
+
+    double binWidth(double mean)
+    {      
+      std::vector<double> cutOff = {51.1, 181.5, 455.4,  633.6, 976.8, 2019.6, 4210.8, 5636.4, 8382.0, 16724.4, 34254.0, 45658.8, 67623.6, 134362.8, 274599.6, 365838.0};
+      std::vector<double> binWidthVec = {3.1, 6.2, 12.4, 24.8, 24.8, 49.6, 99.2, 198.4, 198.4, 396.8, 793.6, 1587, 1587, 3174, 6349, 12700};
+      int index = -1;
+      for(int i = 0; i < cutOff.size(); i++)
+      {
+	if(mean > cutOff[i] && i+1 != cutOff.size() ) continue;
+	else
+	{
+	    index = i; 
+	    break;
+	}
+      }
+      if(index == -1) std::cout<<"Tell Chris I failed to get the binWidth on line 590ish for mean: "<<mean<<std::endl;
+
+      //std::cout<<"Mean "<<mean<<" binWidth"<<binWidthVec[index]<<" cutOff"<<cutOff[index]<<std::endl;
+      return binWidthVec[index];
+    }
         
 public:
     FitResults* getFitResults()
@@ -762,7 +782,11 @@ public:
                 mean.push_back( m/n );
                 rms.push_back( sqrt(m2/n) );
 		double s = sqrt( m2/n - (m/n)*(m/n));
-		//if(s < 0.001) s = 0.1; 
+		if(s < 0.001) 
+		{
+		    s = binWidth( m/n )/sqrt(12); 
+		    //std::cout<<"Error "<<s<<std::endl;
+		}
                 sigma.push_back(s);		
                 error.push_back( sqrt(me2/n) );
                 tdc.push_back( t/n );
