@@ -495,7 +495,6 @@ private:
         for(int index = 0; index < p->mean.size(); index++)
         {
             if(p->verb) std::cout<<"Measured: "<<index<<" "<<p->mean[index]<<" +/- "<<p->sigma[index]<<std::endl;
-	    //std::cout<<"Measured: "<<index<<" "<<p->mean[index]<<" +/- "<<p->sigma[index]<<std::endl;
             //Adding in bitwise and logic for the signed bit settings
             int setting;
             if(p->plugin == "pedestalScan") setting = ((index & 0x20) ? 1 : -1)*(index & 0x1f);
@@ -518,7 +517,6 @@ private:
 		setMin = false;
 	    }
 	    if(!(index == -1) && p->isIncreasing) p->isIncreasing = (pairVec[index].second <= pair.second) ? true : false;
-	    //std::cout<<"Setting: "<<pair.first<<" "<<p->plugin<<" "<<p->isIncreasing<<" "<<pairVec[index].second<<" "<<pair.second<<std::endl;
 	    //std::cout<<"Setting: "<<pair.first<<" "<<p->plugin<<" "<<p->isIncreasing<<" "<<pairVec[index].second<<" "<<pair.second<<std::endl;
 	    index++;
 	}
@@ -766,7 +764,7 @@ public:
 
         for(auto* p : pVec)
         {
-            std::vector<double> mean, rms, sigma, error, tdc;
+            std::vector<double> mean, rms, sigma, tdc;
             for(int index = 0; index < p->scan->GetNbinsX()/p->nEvents; index++)
             {
                 double m = 0, m2 = 0, me2 = 0; int n = 0, t = 0;
@@ -781,18 +779,16 @@ public:
                 //if(verb) std::cout<<n<<std::endl
                 mean.push_back( m/n );
                 rms.push_back( sqrt(m2/n) );
-		double s = sqrt( m2/n - (m/n)*(m/n));
-		if(s < 0.001) 
-		{
-		    s = binWidth( m/n )/sqrt(12); 
-		    //std::cout<<"Error "<<s<<std::endl;
-		}
+		double s1 = sqrt( m2/n - (m/n)*(m/n));
+		double s2 = binWidth( m/n )/sqrt(12); 
+		double s3 = sqrt(me2/n);
+		double s = std::max(s1, s2);
+		if(r.plugin == "pedestalScan") s = std::max(s2, s3);
+		//std::cout<<"Error "<<s1<<" "<<s2<<" "<<s3<<std::endl;
                 sigma.push_back(s);		
-                error.push_back( sqrt(me2/n) );
                 tdc.push_back( t/n );
             }
-            if(r.plugin == "pedestalScan") p->setGraphInfo(mean, rms, error, tdc);
-            else p->setGraphInfo(mean, rms, sigma, tdc);
+	    p->setGraphInfo(mean, rms, sigma, tdc);
         }
         
         if(r.plugin == "gselScan" || r.plugin == "iQiScan")
